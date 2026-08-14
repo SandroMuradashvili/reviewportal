@@ -1,0 +1,2 @@
+import { FeedbackFlow } from "@/components/feedback-flow"; import { getLocale } from "@/lib/i18n";
+export default async function Portal({params}:{params:Promise<{locale:string;slug:string}>}){const {locale:raw,slug}=await params;const locale=getLocale(raw);const business=slug==="demo"?"Gvino & Co.":slug.split("-").map(x=>x.charAt(0).toUpperCase()+x.slice(1)).join(" ");return <FeedbackFlow locale={locale} business={business} slug={slug}/>}

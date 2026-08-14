@@ -1,0 +1,13 @@
+"use client";
+import { Star } from "lucide-react";
+import { useState } from "react";
+import { copy, Locale } from "@/lib/i18n";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+
+export function FeedbackFlow({locale, business, slug}:{locale:Locale;business:string;slug:string}) {
+  const t=copy[locale], [rating,setRating]=useState(0),[comment,setComment]=useState(""),[sent,setSent]=useState(false),[busy,setBusy]=useState(false);
+  const submitFeedback=useMutation(api.feedback.submit); const [error,setError]=useState("");
+  async function submit(){if(!rating)return;setBusy(true);setError("");try{if(slug==="demo")await new Promise(r=>setTimeout(r,350));else{let token=localStorage.getItem(`rp_visit_${slug}`);if(!token){const raw=crypto.randomUUID();const bytes=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(raw));token=Array.from(new Uint8Array(bytes),b=>b.toString(16).padStart(2,"0")).join("");localStorage.setItem(`rp_visit_${slug}`,token)}await submitFeedback({slug,visitTokenHash:token,rating,comment:comment||undefined})}setSent(true)}catch{setError("We couldn't send your feedback. Please try again.")}finally{setBusy(false)}}
+  return <main className="feedback-page"><section className="feedback-card" aria-live="polite">{slug==="demo"&&<div className="pill" style={{marginBottom:18}}>Preview — responses are not saved</div>}<div className="phone-logo" style={{display:"grid",placeItems:"center",fontWeight:800,color:"var(--green)"}}>{business.slice(0,1)}</div><h2 style={{fontSize:27,letterSpacing:"-.03em"}}>{business}</h2>{sent?<><div style={{width:64,height:64,borderRadius:"50%",background:"var(--lime)",display:"grid",placeItems:"center",margin:"30px auto",fontSize:28}}>✓</div><h3>{t.thanks}</h3><p className="disclosure">{t.private}</p></>:<><p style={{color:"var(--muted)"}}>{t.feedback}</p><div className="stars" role="radiogroup" aria-label={t.feedback}>{[1,2,3,4,5].map(n=><button key={n} className={`star ${n<=rating?"active":""}`} onClick={()=>setRating(n)} role="radio" aria-checked={rating===n} aria-label={`${n} out of 5`}><Star size={42} fill={n<=rating?"currentColor":"none"}/></button>)}</div>{rating>0?<><label htmlFor="comment" style={{display:"block",textAlign:"left",fontWeight:700,fontSize:14}}>{t.comment}</label><textarea id="comment" maxLength={1000} value={comment} onChange={e=>setComment(e.target.value)}/><button className="button" style={{width:"100%"}} disabled={busy} onClick={submit}>{busy?"…":t.send}</button></>:null}{error?<p style={{color:"var(--danger)"}} role="alert">{error}</p>:null}<p className="disclosure">{t.private}<br/>Powered by ReviewPortal · <a href={`/${locale}/privacy`}>Privacy</a></p></>}</section></main>
+}
