@@ -6,4 +6,5 @@ node_modules
 coverage
 *.log
 *.tsbuildinfo
+client_secret*.json
 .DS_Store
