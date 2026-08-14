@@ -5,7 +5,7 @@ import { ConvexProvider } from "@/components/convex-provider";
 
 export const metadata: Metadata = {
   title: { default: "ReviewPortal — Customer feedback made simple", template: "%s · ReviewPortal" },
-  description: "Private customer feedback, simple analytics, and QR/NFC products for Georgian businesses.",
+  description: "Collect private feedback, improve customer service, strengthen your reputation, and make honest Google reviews easier with QR and NFC.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
