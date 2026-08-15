@@ -26,7 +26,7 @@ export function LegalConsent(){
     <h2 id="consent-title">{t.title}</h2>
     <p>{t.body}</p>
     <div className="consent-scroll" ref={scrollRef} onScroll={onScroll}>
-      {(["privacy","terms","acceptable-use"] as const).map(key=>{const doc=legalContent[key];return <div key={key} className="consent-doc"><h3>{doc.title}</h3><p className="consent-doc-intro">{doc.intro}</p>{doc.sections.map(([h,p])=><div key={h} className="consent-doc-section"><h4>{h}</h4><p>{p}</p></div>)}</div>})}
+      {(["privacy","terms","acceptable-use"] as const).map(key=>{const doc=legalContent[key][locale];return <div key={key} className="consent-doc"><h3>{doc.title}</h3><p className="consent-doc-intro">{doc.intro}</p>{doc.sections.map(([h,p])=><div key={h} className="consent-doc-section"><h4>{h}</h4><p>{p}</p></div>)}</div>})}
     </div>
     {!scrolledToEnd?<p className="consent-scroll-hint">{t.scrollHint}</p>:null}
     <button className="button" disabled={!scrolledToEnd} onClick={()=>{localStorage.setItem("reviewportal_legal_consent",version);window.dispatchEvent(new Event("reviewportal-consent"))}}>{t.accept}</button>
