@@ -10,10 +10,15 @@
 
 import type * as admin from "../admin.js";
 import type * as auth from "../auth.js";
+import type * as catalog from "../catalog.js";
+import type * as dashboardData from "../dashboardData.js";
 import type * as feedback from "../feedback.js";
 import type * as http from "../http.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as operator from "../operator.js";
 import type * as portals from "../portals.js";
+import type * as publicPortal from "../publicPortal.js";
+import type * as users from "../users.js";
 
 import type {
   ApiFromModules,
@@ -24,10 +29,15 @@ import type {
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   auth: typeof auth;
+  catalog: typeof catalog;
+  dashboardData: typeof dashboardData;
   feedback: typeof feedback;
   http: typeof http;
   "lib/auth": typeof lib_auth;
+  operator: typeof operator;
   portals: typeof portals;
+  publicPortal: typeof publicPortal;
+  users: typeof users;
 }>;
 
 /**

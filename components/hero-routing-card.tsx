@@ -1,28 +1,21 @@
-import { ExternalLink, MessageSquareText, Star, Users } from "lucide-react";
+import { ExternalLink, MessageSquareText, Users } from "lucide-react";
 import type { Locale } from "@/lib/i18n";
 
 const routingCopy = {
-  ka: { kicker:"უკუკავშირის ნაკადი",title:"მარტივი გზა ყოველი შეფასებისთვის",publicLabel:"ყველა შეფასება",publicTitle:"Google-ის ბმულის შეთავაზება",publicSub:"ყველა მომხმარებელი იღებს ერთსა და იმავე შესაძლებლობას.",privateLabel:"1–3 ვარსკვლავი",privateTitle:"პრობლემის პირადად მიღება",privateSub:"დაბალი შეფასება ინიშნება სწრაფი რეაგირებისთვის.",happy:"ნინომ 5 ვარსკვლავი შეაფასა",happySub:"Google-ის შეფასების ბმული გაიხსნა",issue:"გიორგიმ 2 ვარსკვლავი შეაფასა",issueSub:"პრობლემა მონიშნულია რეაგირებისთვის",visits:"ვიზიტი",opens:"ბმულის გახსნა",feedback:"პირადი უკუკავშირი" },
-  en: { kicker:"Feedback flow",title:"One simple path for every rating",publicLabel:"All ratings",publicTitle:"Offer Google review link",publicSub:"Every customer gets the same opportunity.",privateLabel:"1–3 stars",privateTitle:"Capture the issue privately",privateSub:"Low ratings are flagged for quick follow-up.",happy:"Amina rated 5 stars",happySub:"Google review link opened",issue:"Omar rated 2 stars",issueSub:"Flagged for private follow-up",visits:"visits",opens:"link opens",feedback:"private feedback" },
-  ru: { kicker:"Поток отзывов",title:"Простой путь для каждой оценки",publicLabel:"Все оценки",publicTitle:"Предложить ссылку Google",publicSub:"У каждого клиента одинаковая возможность.",privateLabel:"1–3 звезды",privateTitle:"Получить проблему лично",privateSub:"Низкие оценки отмечаются для быстрого ответа.",happy:"Амина поставила 5 звёзд",happySub:"Открыта ссылка на отзыв Google",issue:"Омар поставил 2 звезды",issueSub:"Отмечено для личного ответа",visits:"визитов",opens:"переходов",feedback:"личных отзывов" },
-};
+  ka: { publicStars:"4–5 ვარსკვლავი",publicTitle:"Google-ზე გადასვლა",publicDetail:"კმაყოფილი მომხმარებელი აგრძელებს Google-ის გვერდზე.",privateStars:"1–3 ვარსკვლავი",privateTitle:"პირადი უკუკავშირი",privateDetail:"პრობლემა პირადად გიზიარდებათ.",visits:"ვიზიტი",redirects:"გადასვლა",feedback:"პირადი პასუხი" },
+  en: { publicStars:"4–5 stars",publicTitle:"Continue to Google",publicDetail:"Happy customers open your Google page.",privateStars:"1–3 stars",privateTitle:"Capture privately",privateDetail:"Issues are shared with you privately.",visits:"visits",redirects:"redirects",feedback:"private feedback" },
+  ru: { publicStars:"4–5 звёзд",publicTitle:"Перейти в Google",publicDetail:"Довольные клиенты открывают вашу страницу Google.",privateStars:"1–3 звезды",privateTitle:"Получить лично",privateDetail:"О проблеме сообщают вам лично.",visits:"визитов",redirects:"переходов",feedback:"личных отзывов" },
+} satisfies Record<Locale, Record<string, string>>;
 
 export function HeroRoutingCard({ locale }: { locale: Locale }) {
   const t = routingCopy[locale];
-  return <article className="routing-card">
-    <header className="routing-header"><span>{t.kicker}</span><h2>{t.title}</h2></header>
-    <div className="routing-paths">
-      <section className="route-item public-route"><span className="route-label"><ExternalLink size={14}/>{t.publicLabel}</span><h3>{t.publicTitle}</h3><p>{t.publicSub}</p></section>
-      <section className="route-item private-route"><span className="route-label"><MessageSquareText size={14}/>{t.privateLabel}</span><h3>{t.privateTitle}</h3><p>{t.privateSub}</p></section>
+  return <div className="hero-routing" aria-label="Review routing example">
+    <div className="hero-route hero-route-public"><span className="hero-route-icon"><ExternalLink size={16}/></span><div><small>{t.publicStars}</small><strong>{t.publicTitle}</strong><p>{t.publicDetail}</p></div></div>
+    <div className="hero-route hero-route-private"><span className="hero-route-icon"><MessageSquareText size={16}/></span><div><small>{t.privateStars}</small><strong>{t.privateTitle}</strong><p>{t.privateDetail}</p></div></div>
+    <div className="hero-routing-metrics">
+      <div><Users size={15}/><strong>184</strong><span>{t.visits}</span></div>
+      <div><ExternalLink size={15}/><strong>129</strong><span>{t.redirects}</span></div>
+      <div><MessageSquareText size={15}/><strong>31</strong><span>{t.feedback}</span></div>
     </div>
-    <div className="routing-activity">
-      <div><span><strong>{t.happy}</strong><small>{t.happySub}</small></span><span className="activity-pill public"><ExternalLink size={13}/> Google</span></div>
-      <div><span><strong>{t.issue}</strong><small>{t.issueSub}</small></span><span className="activity-pill private"><MessageSquareText size={13}/> Private</span></div>
-    </div>
-    <footer className="routing-metrics">
-      <div><Users size={19}/><strong>184</strong><span>{t.visits}</span></div>
-      <div><ExternalLink size={19}/><strong>129</strong><span>{t.opens}</span></div>
-      <div><Star size={19}/><strong>31</strong><span>{t.feedback}</span></div>
-    </footer>
-  </article>;
+  </div>;
 }

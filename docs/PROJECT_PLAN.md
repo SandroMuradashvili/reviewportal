@@ -176,7 +176,3 @@ Indexes must support owner/portal lookups, slug resolution, feedback by portal/d
 - The public portal becomes unavailable at the trial limit until manual activation; owner configuration and existing trial feedback remain accessible.
 - No online checkout, automatic recurring billing, SMS campaigns, AI-generated replies, Google Business Profile API connection, or team-member invitations are included in v1.
 
-## 14. Redirect and platform-policy restriction
-
-Threshold-based actions may route to ordinary first-party business destinations such as a thank-you, booking, support, loyalty, or private-resolution page. They must not selectively expose Google Reviews or another public review platform only to favorable ratings. If a public-review destination is offered, access must be materially equal for every rating. ReviewPortal must not impersonate Google, hide this limitation in legal text, or claim that redirect clicks prove published reviews. Google explicitly prohibits discouraging negative reviews or selectively soliciting positive reviews, and violations can result in Business Profile restrictions. Final implementation and legal copy must be checked against current platform rules before launch.
-
