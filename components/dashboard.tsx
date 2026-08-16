@@ -1580,6 +1580,8 @@ function Feedback({
     [deleteRequest, setDeleteRequest] = useState<string | null>(null),
     [opened, setOpened] = useState<FeedbackRow | null>(null),
     [filterNow] = useState(() => Date.now());
+  const inboxRef=useRef<HTMLDivElement>(null),inboxSnapped=useRef(false);
+  useEffect(()=>{const target=inboxRef.current;if(!target)return;const observer=new IntersectionObserver(entries=>{if(!inboxSnapped.current&&entries[0]?.isIntersecting&&window.scrollY>300){inboxSnapped.current=true;target.scrollIntoView({behavior:"smooth",block:"start"})}},{threshold:.35});observer.observe(target);return()=>observer.disconnect()},[]);
   const filtered = rows.filter(
     (row) =>
       row.rating >= minRating && row.rating <= maxRating &&
@@ -1668,7 +1670,7 @@ function Feedback({
   }
   return (
     <>
-      <div className="section-head compact">
+      <div className="section-head compact" ref={inboxRef}>
         <div>
           <h2 className="dash-section-title">
             {tr(
