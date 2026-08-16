@@ -256,6 +256,7 @@ export function Dashboard({ siteUrl }: { siteUrl: string }) {
     setUserLocale = useMutation(api.users.setLocale),
     setUserState = useMutation(api.admin.setState),
     activate = useMutation(api.admin.activate),
+    initializeCatalog = useMutation(api.admin.initializeCatalog),
     saveProduct = useMutation(api.admin.saveProduct),
     removeProduct = useMutation(api.admin.removeProduct),
     savePackage = useMutation(api.admin.savePackage),
@@ -267,6 +268,10 @@ export function Dashboard({ siteUrl }: { siteUrl: string }) {
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false),
     [localeOverride, setLocaleOverride] = useState<Locale | null>(null);
+  useEffect(() => {
+    if (me?.user.role === "admin" && adminCatalog && !adminCatalog.products.length && !adminCatalog.packages.length)
+      void initializeCatalog({});
+  }, [adminCatalog, initializeCatalog, me?.user.role]);
   const portals = data?.portals ?? [],
     filteredFeedback = useMemo(
       () =>
