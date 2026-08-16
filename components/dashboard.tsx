@@ -82,12 +82,12 @@ const dashboardCopy = {
     slug: "პორტალის ბმული",
     slugHelp:
       "ბმულის მოკლე, უნიკალური ნაწილი. სახელიდან ავტომატურად იქმნება და შეგიძლიათ შეცვალოთ.",
-    reviewUrl: "4–5 ვარსკვლავის დანიშნულების ბმული",
+    reviewUrl: "4–5★ Google შეფასების ბმული",
     reviewHelp:
-      "მაღალი შეფასების შემდეგ მომხმარებელი პირდაპირ ამ HTTPS ბმულზე გადავა.",
-    businessUrl: "1–3 ვარსკვლავის არასავალდებულო ბმული",
+      "ჩასვით თქვენი Google-ის პირდაპირი შეფასების ბმული.",
+    businessUrl: "1–3★ Google Maps ბიზნესის ბმული (არასავალდებულო)",
     businessHelpUrl:
-      "პირადი უკუკავშირის შემდეგ მომხმარებელს ეს არასავალდებულო HTTPS ბმული გამოუჩნდება.",
+      "მკაცრად რეკომენდებულია: ჩასვით Google Maps-ზე თქვენი ბიზნესის მთავარი გვერდი და არა შეფასების პირდაპირი ფორმა.",
     cancel: "გაუქმება",
     save: "შენახვა",
     createSave: "პორტალის შექმნა",
@@ -140,12 +140,12 @@ const dashboardCopy = {
     slug: "Portal link",
     slugHelp:
       "The short, unique part of the link. It is generated from the business name and remains editable.",
-    reviewUrl: "4–5 star destination URL",
+    reviewUrl: "4–5★ Google review link",
     reviewHelp:
-      "Customers with a high rating continue directly to this HTTPS destination.",
-    businessUrl: "Optional 1–3 star destination URL",
+      "Paste the direct Google link customers use to write a review.",
+    businessUrl: "1–3★ Google Maps business link (optional)",
     businessHelpUrl:
-      "After private feedback, customers see this optional HTTPS destination.",
+      "Strongly recommended: use your main Google Maps business profile, not the direct review form.",
     cancel: "Cancel",
     save: "Save changes",
     createSave: "Create portal",
@@ -198,12 +198,12 @@ const dashboardCopy = {
     slug: "Ссылка портала",
     slugHelp:
       "Короткая уникальная часть ссылки. Создаётся из названия компании, но её можно изменить.",
-    reviewUrl: "Адрес назначения для 4–5 звёзд",
+    reviewUrl: "Ссылка Google для отзывов 4–5★",
     reviewHelp:
-      "После высокой оценки клиент сразу перейдёт по этому HTTPS-адресу.",
-    businessUrl: "Необязательный адрес для 1–3 звёзд",
+      "Вставьте прямую ссылку Google для написания отзыва.",
+    businessUrl: "Профиль компании в Google Maps для 1–3★ (необязательно)",
     businessHelpUrl:
-      "После личного отзыва клиент увидит этот необязательный HTTPS-адрес.",
+      "Настоятельно рекомендуем основную страницу компании в Google Maps, а не прямую форму отзыва.",
     cancel: "Отмена",
     save: "Сохранить",
     createSave: "Создать портал",
@@ -241,6 +241,8 @@ function errorMessage(reason: unknown, fallback: string) {
 }
 const tr = (locale: Locale, ka: string, en: string, ru: string) =>
   locale === "ka" ? ka : locale === "ru" ? ru : en;
+
+function buildAnalyticsDemo(data:DashboardData,now:number):DashboardData{const portal=data.portals[0];if(!portal)return data;const ratings=[...Array(28).fill(1),...Array(22).fill(2),...Array(18).fill(3),...Array(17).fill(4),...Array(15).fill(5)] as number[],recent=ratings.map((rating,index)=>({ _id:`demo-feedback-${index}` as FeedbackRow["_id"],_creationTime:now-index*21600000,portalId:portal._id,visitId:`demo-visit-${index}` as FeedbackRow["visitId"],rating,comment:rating<=3?["The wait was longer than expected.","Service could have been more attentive.","The product did not match my expectations."][index%3]:undefined,issueCategories:rating<=3?(["service",index%2?"wait":"quality"] as FeedbackRow["issueCategories"]):[],dataAcknowledgedAt:rating<=3?now-index*21600000:undefined,status:index<12?"unread" as const:index%4===0?"resolved" as const:"read" as const,submittedAt:now-index*21600000,portalName:portal.name})),start=new Date(now);start.setHours(0,0,0,0);const daily=Array.from({length:30},(_,offset)=>{const date=start.getTime()-(29-offset)*86400000,rows=recent.filter(row=>row.submittedAt>=date&&row.submittedAt<date+86400000);return {date,total:rows.length,ratings:[1,2,3,4,5].map(rating=>rows.filter(row=>row.rating===rating).length)}}),ratingDistribution=[1,2,3,4,5].map(rating=>({rating,count:recent.filter(row=>row.rating===rating).length})),metrics={total:100,average:recent.reduce((sum,row)=>sum+row.rating,0)/100,happy:32,uniqueVisitors:143,conversion:69.9,redirects:24,privateResolutions:61},portalMetrics=data.portalMetrics.map(item=>item.portalId===portal._id?{...item,metrics,daily,ratingDistribution}:item);return {...data,portals:data.portals.map(item=>item._id===portal._id?{...item,submissionCount:100}:item),recent,daily,ratingDistribution,metrics,portalMetrics}}
 
 export function Dashboard({ siteUrl }: { siteUrl: string }) {
   const data = useQuery(api.dashboardData.overview),
@@ -280,6 +282,7 @@ export function Dashboard({ siteUrl }: { siteUrl: string }) {
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false),
+    [analyticsDemo,setAnalyticsDemo]=useState(false),[demoNow]=useState(()=>Date.now()),
     [localeOverride, setLocaleOverride] = useState<Locale | null>(null);
   const catalogChecked = useRef(false);
   useEffect(() => {
@@ -288,13 +291,14 @@ export function Dashboard({ siteUrl }: { siteUrl: string }) {
       void initializeCatalog({});
     }
   }, [adminCatalog, initializeCatalog, me?.user.role]);
-  const portals = data?.portals ?? [],activePortal=selectedPortal === "all" ? portals[0]?._id ?? "all" : selectedPortal,
+  const isAdmin=me?.user.role==="admin",displayData=useMemo(()=>data&&analyticsDemo&&isAdmin?buildAnalyticsDemo(data,demoNow):data,[analyticsDemo,data,demoNow,isAdmin]);
+  const portals = displayData?.portals ?? [],activePortal=selectedPortal === "all" ? portals[0]?._id ?? "all" : selectedPortal,
     filteredFeedback = useMemo(
       () =>
-        data?.recent.filter(
+        displayData?.recent.filter(
           (row) => activePortal === "all" || row.portalId === activePortal,
         ) ?? [],
-      [activePortal, data],
+      [activePortal, displayData],
     );
   const locale = localeOverride ?? me?.user.locale ?? "ka";
   const d = dashboardCopy[locale];
@@ -330,13 +334,13 @@ export function Dashboard({ siteUrl }: { siteUrl: string }) {
         {dashboardCopy.ka.loading}
       </main>
     );
-  const trialLimit = me.subscription.trialLimit ?? 10,
-    totalUsed = data.portals.reduce((sum, p) => sum + p.submissionCount, 0),
+  const dashboardData=displayData??data,trialLimit = me.subscription.trialLimit ?? 10,
+    totalUsed = dashboardData.portals.reduce((sum, p) => sum + p.submissionCount, 0),
     remaining = Math.max(0, trialLimit - totalUsed);
-  const portalScope = data.portalMetrics.find((item) => item.portalId === activePortal),
+  const portalScope = dashboardData.portalMetrics.find((item) => item.portalId === activePortal),
     scopedData = portalScope
-      ? { ...data, metrics: portalScope.metrics, daily: portalScope.daily, ratingDistribution: portalScope.ratingDistribution }
-      : data;
+      ? { ...dashboardData, metrics: portalScope.metrics, daily: portalScope.daily, ratingDistribution: portalScope.ratingDistribution }
+      : dashboardData;
   return (
     <main className="dashboard-shell">
       <aside className="sidebar">
@@ -392,6 +396,7 @@ export function Dashboard({ siteUrl }: { siteUrl: string }) {
             </h1>
           </div>
           <div className="dash-top-actions">
+            {me.user.role==="admin"?<button className={`button demo-toggle ${analyticsDemo?"active":"secondary"}`} aria-pressed={analyticsDemo} onClick={()=>{setAnalyticsDemo(!analyticsDemo);setView("overview")}}>{analyticsDemo?"Demo analytics on":"Preview demo analytics"}</button>:null}
             <div className="dashboard-locales" aria-label={d.language}>
               {(["ka", "en", "ru"] as const).map((item) => (
                 <button
@@ -435,6 +440,7 @@ export function Dashboard({ siteUrl }: { siteUrl: string }) {
         {me.user.role !== "admin" && me.subscription.status === "expired" ? <section className="subscription-warning" role="alert"><strong>{tr(locale,"თქვენი პაკეტის ვადა დასრულდა.","Your subscription has expired.","Срок вашей подписки истёк.")}</strong><span>{tr(locale,"პანელი და ისტორია ხელმისაწვდომია, მაგრამ პორტალები აღარ მიიღებს ახალ უკუკავშირს ხელახლა გააქტიურებამდე.","Your dashboard and history remain available, but portals cannot accept new feedback until access is reactivated.","Панель и история доступны, но порталы не принимают новые отзывы до повторной активации.")}</span></section>:null}
         {view === "overview" ? (
           <>
+            {analyticsDemo?<div className="demo-analytics-notice"><strong>Demo analytics · 100 simulated responses over 30 days</strong><span>Visual preview only — production records are unchanged.</span></div>:null}
             <PortalScope locale={locale} portals={portals} value={activePortal} onChange={setSelectedPortal} />
             <Overview locale={locale} data={scopedData} setView={setView} />
             <DailyChart locale={locale} daily={scopedData.daily} />
@@ -1353,7 +1359,7 @@ function PortalEditor({
               name="destinationUrl"
               type="url"
               defaultValue={portal?.destinationUrl ?? ""}
-              placeholder="https://example.com/review"
+              placeholder="https://g.page/r/…/review"
             />
             <small>
               <HelpCircle size={13} />
@@ -1366,7 +1372,7 @@ function PortalEditor({
               name="businessUrl"
               type="url"
               defaultValue={portal?.businessUrl ?? ""}
-              placeholder="https://example.com/business"
+              placeholder="https://maps.app.goo.gl/…"
             />
             <small>
               <HelpCircle size={13} />
@@ -2302,7 +2308,7 @@ function Admin({
     >(null),
     [packageEditor, setPackageEditor] = useState<
       AdminCatalog["packages"][number] | null | "new"
-    >(null),[subscriptionUser,setSubscriptionUser]=useState<AdminUsers[number]|null>(null),[demoMode,setDemoMode]=useState(false);
+    >(null),[subscriptionUser,setSubscriptionUser]=useState<AdminUsers[number]|null>(null);
   return (
     <>
       <div className="section-head compact">
@@ -2310,9 +2316,7 @@ function Admin({
           <h2 className="dash-section-title">Administration</h2>
           <p>Accounts, storefront products and subscription packages.</p>
         </div>
-        <button className={`button secondary ${demoMode?"active":""}`} onClick={()=>setDemoMode(!demoMode)}>{demoMode?"Exit demo data":"Preview demo data"}</button>
       </div>
-      {demoMode?<DemoAdminData/>:null}
       <AdminHeading
         icon={ShoppingBag}
         title="NFC products & sets"
@@ -2427,7 +2431,7 @@ function Admin({
         ))}
       </div>
       <AdminHeading icon={ShieldCheck} title="User accounts" />
-      {demoMode?<DemoUserList/>:<div className="admin-list">
+      <div className="admin-list">
         {users.map((item) => (
           <article className="card admin-user" key={item.user._id}>
             <div>
@@ -2474,7 +2478,7 @@ function Admin({
             </div>
           </article>
         ))}
-      </div>}
+      </div>
       {subscriptionUser?<SubscriptionEditor user={subscriptionUser} packages={catalog.packages} busy={busy} close={()=>setSubscriptionUser(null)} assign={values=>act(()=>assignSubscription(values),"Subscription saved.").then(ok=>{if(ok)setSubscriptionUser(null)})} expire={()=>act(()=>expireSubscription({ownerId:subscriptionUser.user._id}),"Subscription expired.").then(ok=>{if(ok)setSubscriptionUser(null)})}/>:null}
       <AdminHeading icon={ShieldCheck} title="Legal documents" />
       <LegalManager busy={busy} save={values=>act(()=>saveLegalDocument(values),"Legal document published. Users will see an in-app update notice.")}/>
@@ -2482,8 +2486,6 @@ function Admin({
   );
 }
 
-function DemoAdminData(){return <section className="demo-admin-banner"><div><span>Demo mode · browser only</span><strong>No records are written to production</strong></div><div className="demo-admin-stats"><div><strong>100</strong><span>users this month</span></div><div><strong>287</strong><span>portals</span></div><div><strong>4,820</strong><span>responses</span></div><div><strong>8</strong><span>plans ending soon</span></div></div></section>}
-function DemoUserList(){const plans=["ReviewPortal","Business custom","Trial"];return <div className="admin-list demo-user-list">{Array.from({length:100},(_,index)=>{const day=1+index%30,status=index%11===0?"Expired":index%7===0?"Ends soon":"Active",plan=plans[index%plans.length];return <article className="card admin-user" key={index}><div><strong>Demo Business {String(index+1).padStart(3,"0")}</strong><small>owner{index+1}@demo.reviewportal.local · owner · active</small><div className={`subscription-summary ${status==="Expired"?"expired-state":status==="Ends soon"?"ending-state":"active-state"}`}><strong>{plan} · {status}</strong><span>Joined Aug {day}, 2026 · visual preview only</span></div></div><span>{1+index%5} portals · {12+(index*17)%140} responses</span><button className="button secondary" disabled>Demo account</button></article>})}</div>}
 function LegalManager({busy,save}:{busy:boolean;save:(values:Parameters<ReactMutation<typeof api.legalDocuments.save>>[0])=>Promise<boolean>}){const [documentType,setDocumentType]=useState<"privacy"|"terms"|"acceptable-use">("terms"),[locale,setLocale]=useState<Locale>("ka"),stored=useQuery(api.legalDocuments.document,{documentType,locale}),fallback=legalContent[documentType][locale],doc=stored?{title:stored.title,intro:stored.intro,sections:stored.sections.map(section=>[section.heading,section.body] as [string,string])}:fallback,key=`${documentType}:${locale}:${stored?._id??"default"}`;return <form key={key} className="card legal-manager" onSubmit={event=>{event.preventDefault();const f=new FormData(event.currentTarget),sections=String(f.get("sections")??"").split(/\n---\n/).map(block=>{const [heading,...body]=block.split("\n");return {heading:heading.trim(),body:body.join("\n").trim()}}).filter(section=>section.heading&&section.body);void save({documentType,locale,title:String(f.get("title")),intro:String(f.get("intro")),sections,version:String(f.get("version"))})}}><div className="legal-manager-controls"><label>Document<select value={documentType} onChange={event=>setDocumentType(event.target.value as typeof documentType)}><option value="terms">Terms of Service</option><option value="privacy">Privacy Policy</option><option value="acceptable-use">Acceptable Use Policy</option></select></label><label>Language<select value={locale} onChange={event=>setLocale(event.target.value as Locale)}><option value="ka">Georgian</option><option value="en">English</option><option value="ru">Russian</option></select></label><label>Version<input name="version" required defaultValue={stored?.version??new Date().toISOString().slice(0,10)}/></label></div><label>Page title<input name="title" required defaultValue={doc.title}/></label><label>Introduction<textarea name="intro" required defaultValue={doc.intro}/></label><label>Sections <small>Heading on the first line, body below it. Separate sections with a line containing ---</small><textarea className="legal-sections-editor" name="sections" required defaultValue={doc.sections.map(([heading,body])=>`${heading}\n${body}`).join("\n---\n")}/></label><div className="legal-publish-note"><strong>Publishing updates the public page immediately.</strong><span>An in-app notice can be shown to signed-in users. Automated email is unavailable until a sender provider and verified domain are configured.</span></div><button className="button" disabled={busy}>Publish legal document</button></form>}
 function SubscriptionSummary({subscription}:{subscription:AdminUsers[number]["subscription"]}){
   const [now]=useState(()=>Date.now());

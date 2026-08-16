@@ -1734,6 +1734,9 @@ h2 {
 .demo-admin-stats > div { padding:14px; border-radius:12px; background:#ffffff12; display:grid; gap:3px; }
 .demo-admin-stats strong { font-size:24px; }
 .demo-user-list { max-height:760px; overflow:auto; padding-right:6px; }
+.demo-toggle.active { background:#d5ff78; color:#183324; box-shadow:0 0 0 3px #d5ff7844; }
+.demo-analytics-notice { margin:20px 0 0; padding:14px 17px; display:flex; justify-content:space-between; gap:14px; border-radius:13px; background:#173d2b; color:white; }
+.demo-analytics-notice span { color:#cce1d4; font-size:12px; }
 .legal-manager { display:grid; gap:14px; }
 .legal-manager label { display:grid; gap:6px; font-size:12px; font-weight:700; }
 .legal-manager input,.legal-manager select,.legal-manager textarea { width:100%; min-height:44px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:white; }
