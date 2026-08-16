@@ -16,6 +16,7 @@ import type * as feedback from "../feedback.js";
 import type * as http from "../http.js";
 import type * as legalDocuments from "../legalDocuments.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as notifications from "../notifications.js";
 import type * as operator from "../operator.js";
 import type * as portals from "../portals.js";
 import type * as publicPortal from "../publicPortal.js";
@@ -36,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   legalDocuments: typeof legalDocuments;
   "lib/auth": typeof lib_auth;
+  notifications: typeof notifications;
   operator: typeof operator;
   portals: typeof portals;
   publicPortal: typeof publicPortal;

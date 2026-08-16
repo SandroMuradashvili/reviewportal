@@ -163,4 +163,5 @@ export default defineSchema({
     title:v.string(),intro:v.string(),sections:v.array(v.object({heading:v.string(),body:v.string()})),
     version:v.string(),updatedAt:v.number(),updatedBy:v.id("users"),
   }).index("document_locale",["documentType","locale"]),
+  notifications:defineTable({userId:v.id("users"),type:v.union(v.literal("subscription"),v.literal("legal"),v.literal("system")),title:v.object({ka:v.string(),en:v.string(),ru:v.string()}),body:v.object({ka:v.string(),en:v.string(),ru:v.string()}),createdAt:v.number(),readAt:v.optional(v.number())}).index("user_date",["userId","createdAt"]),
 });

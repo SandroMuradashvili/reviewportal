@@ -29,6 +29,7 @@ import {
   Users,
   Route,
   CreditCard,
+  Bell,
 } from "lucide-react";
 import QRCode from "qrcode";
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
@@ -38,7 +39,7 @@ import { legalContent } from "@/lib/legal";
 import { PlanCatalog, ProductCatalog } from "@/components/catalog";
 import { whatsapp } from "@/lib/data";
 
-type View = "overview" | "portals" | "subscriptions" | "products" | "profile" | "support" | "admin";
+type View = "overview" | "portals" | "subscriptions" | "products" | "notifications" | "profile" | "support" | "admin";
 type DashboardData = FunctionReturnType<typeof api.dashboardData.overview>;
 type Portal = DashboardData["portals"][number];
 type FeedbackRow = DashboardData["recent"][number];
@@ -247,7 +248,7 @@ function buildAnalyticsDemo(data:DashboardData,now:number):DashboardData{const p
 export function Dashboard({ siteUrl }: { siteUrl: string }) {
   const data = useQuery(api.dashboardData.overview),
     me = useQuery(api.users.me),
-    legalUpdate = useQuery(api.legalDocuments.latest),
+    notifications=useQuery(api.notifications.mine),
     adminUsers = useQuery(
       api.admin.users,
       me?.user.role === "admin" ? {} : "skip",
@@ -270,6 +271,7 @@ export function Dashboard({ siteUrl }: { siteUrl: string }) {
     assignSubscription = useMutation(api.admin.assignSubscription),
     expireSubscription = useMutation(api.admin.expireSubscription),
     saveLegalDocument = useMutation(api.legalDocuments.save),
+    markNotificationRead=useMutation(api.notifications.markRead),markAllNotificationsRead=useMutation(api.notifications.markAllRead),
     initializeCatalog = useMutation(api.admin.initializeCatalog),
     generateProductImageUploadUrl = useMutation(api.admin.generateProductImageUploadUrl),
     saveProduct = useMutation(api.admin.saveProduct),
@@ -363,6 +365,7 @@ export function Dashboard({ siteUrl }: { siteUrl: string }) {
           />
           <Nav active={view === "subscriptions"} onClick={() => setView("subscriptions")} icon={CreditCard} label={tr(locale,"პაკეტები","Subscriptions","Подписки")}/>
           <Nav active={view === "products"} onClick={() => setView("products")} icon={ShoppingBag} label={tr(locale,"პროდუქტები","Products","Товары")}/>
+          <Nav active={view === "notifications"} onClick={() => setView("notifications")} icon={Bell} label={`${tr(locale,"შეტყობინებები","Notifications","Уведомления")}${notifications?.some(item=>!item.readAt)?` · ${notifications.filter(item=>!item.readAt).length}`:""}`}/>
           <Nav active={view === "profile"} onClick={() => setView("profile")} icon={Settings} label={tr(locale,"პროფილი","Profile","Профиль")}/>
           <Nav
             active={view === "support"}
@@ -436,7 +439,6 @@ export function Dashboard({ siteUrl }: { siteUrl: string }) {
             {error}
           </p>
         ) : null}
-        {legalUpdate?<section className="legal-update-notice"><strong>{tr(locale,"იურიდიული დოკუმენტები განახლდა","Legal documents were updated","Юридические документы обновлены")}</strong><span>{new Intl.DateTimeFormat(locale==="ka"?"ka-GE":locale==="ru"?"ru-RU":"en",{dateStyle:"medium"}).format(legalUpdate)}</span><Link href={`/${locale}/terms`}>{tr(locale,"ცვლილებების ნახვა","Review changes","Посмотреть изменения")}</Link></section>:null}
         {me.user.role !== "admin" && me.subscription.status === "expired" ? <section className="subscription-warning" role="alert"><strong>{tr(locale,"თქვენი პაკეტის ვადა დასრულდა.","Your subscription has expired.","Срок вашей подписки истёк.")}</strong><span>{tr(locale,"პანელი და ისტორია ხელმისაწვდომია, მაგრამ პორტალები აღარ მიიღებს ახალ უკუკავშირს ხელახლა გააქტიურებამდე.","Your dashboard and history remain available, but portals cannot accept new feedback until access is reactivated.","Панель и история доступны, но порталы не принимают новые отзывы до повторной активации.")}</span></section>:null}
         {view === "overview" ? (
           <>
@@ -471,6 +473,7 @@ export function Dashboard({ siteUrl }: { siteUrl: string }) {
         ) : null}
         {view === "subscriptions"?<DashboardShop locale={locale} kind="subscriptions"/>:null}
         {view === "products"?<DashboardShop locale={locale} kind="products"/>:null}
+        {view === "notifications"?<Notifications locale={locale} rows={notifications??[]} subscription={me.subscription} busy={busy} markRead={markNotificationRead} markAll={markAllNotificationsRead}/>:null}
         {view === "profile" ? (
           <Profile
             d={d}
@@ -2038,6 +2041,101 @@ export function QrTools({
     </>
   );
 }
+
+function Notifications({
+  locale,
+  rows,
+  subscription,
+  busy,
+  markRead,
+  markAll,
+}: {
+  locale: Locale;
+  rows: FunctionReturnType<typeof api.notifications.mine>;
+  subscription: Subscription;
+  busy: boolean;
+  markRead: ReactMutation<typeof api.notifications.markRead>;
+  markAll: ReactMutation<typeof api.notifications.markAllRead>;
+}) {
+  const [now] = useState(() => Date.now());
+  const expiresAt = "expiresAt" in subscription ? subscription.expiresAt : undefined;
+  const days = expiresAt ? Math.ceil((expiresAt - now) / 86_400_000) : null;
+  const showRenewal = days !== null && days <= 7;
+  const dateLocale = locale === "ka" ? "ka-GE" : locale === "ru" ? "ru-RU" : "en";
+  const unread = rows.filter((row) => !row.readAt).length;
+
+  return (
+    <section className="notifications-page">
+      <div className="section-head compact">
+        <div>
+          <h2 className="dash-section-title">
+            {tr(locale, "შეტყობინებები", "Notifications", "Уведомления")}
+          </h2>
+          <p>
+            {tr(
+              locale,
+              "პაკეტის, ანგარიშისა და წესების მნიშვნელოვანი განახლებები.",
+              "Important plan, account, and policy updates.",
+              "Важные обновления тарифа, аккаунта и правил.",
+            )}
+          </p>
+        </div>
+        {unread ? (
+          <button className="button secondary" disabled={busy} onClick={() => void markAll({})}>
+            {tr(locale, "ყველას წაკითხულად მონიშვნა", "Mark all as read", "Прочитать все")}
+          </button>
+        ) : null}
+      </div>
+
+      {showRenewal ? (
+        <div className={`card notification-card ${days !== null && days <= 0 ? "urgent" : "ending"}`}>
+          <span className="notification-icon"><Bell size={19} /></span>
+          <div>
+            <strong>
+              {days !== null && days <= 0
+                ? tr(locale, "პაკეტს გააქტიურება სჭირდება", "Your plan needs reactivation", "Тариф нужно активировать")
+                : tr(locale, "პაკეტის ვადა მალე დასრულდება", "Your plan ends soon", "Срок тарифа скоро закончится")}
+            </strong>
+            <p>
+              {days !== null && days <= 0
+                ? tr(locale, "თქვენი ისტორია შენახულია. პორტალების გასააქტიურებლად დაგვიკავშირდით.", "Your history is saved. Contact us to reactivate your portals.", "История сохранена. Свяжитесь с нами для активации порталов.")
+                : tr(locale, `დარჩენილია ${days} დღე. განახლებისთვის დაგვიკავშირდით.`, `${days} days remaining. Contact us to renew.`, `Осталось дней: ${days}. Свяжитесь с нами для продления.`)}
+            </p>
+          </div>
+          <a className="button" href={whatsapp("Hello ReviewPortal, I want to renew my subscription.")} target="_blank" rel="noreferrer">
+            {tr(locale, "განახლება", "Renew", "Продлить")}
+          </a>
+        </div>
+      ) : null}
+
+      <div className="notification-list">
+        {rows.map((row) => (
+          <button
+            type="button"
+            className={`card notification-card ${row.readAt ? "" : "unread"}`}
+            key={row._id}
+            onClick={() => { if (!row.readAt) void markRead({ notificationId: row._id }); }}
+          >
+            <span className="notification-icon"><Bell size={18} /></span>
+            <span>
+              <strong>{row.title[locale]}</strong>
+              <p>{row.body[locale]}</p>
+              <small>{new Intl.DateTimeFormat(dateLocale, { dateStyle: "medium", timeStyle: "short" }).format(row.createdAt)}</small>
+            </span>
+            {!row.readAt ? <i>{tr(locale, "ახალი", "New", "Новое")}</i> : null}
+          </button>
+        ))}
+        {!rows.length && !showRenewal ? (
+          <div className="card empty-state">
+            <Bell size={24} />
+            <strong>{tr(locale, "ახალი შეტყობინებები არ არის", "You’re all caught up", "Новых уведомлений нет")}</strong>
+          </div>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
 function DashboardShop({locale,kind}:{locale:Locale;kind:"subscriptions"|"products"}){return <section className="dashboard-shop"><div className="section-head compact"><div><h2 className="dash-section-title">{kind==="subscriptions"?tr(locale,"პაკეტები და განახლება","Subscriptions and renewal","Подписки и продление"):tr(locale,"ReviewPortal პროდუქტები","ReviewPortal products","Товары ReviewPortal")}</h2><p>{kind==="subscriptions"?tr(locale,"აირჩიეთ სტანდარტული პაკეტი ან მოგვწერეთ ინდივიდუალური პირობებისთვის.","Choose the standard plan or contact us for custom terms.","Выберите стандартный тариф или свяжитесь с нами для индивидуальных условий."):tr(locale,"QR და NFC პროდუქტები თქვენი უკუკავშირის პორტალებისთვის.","QR and NFC products for your feedback portals.","QR- и NFC-товары для ваших порталов.")}</p></div></div>{kind==="subscriptions"?<><PlanCatalog locale={locale}/><p className="shop-payment-note">{tr(locale,"ონლაინ საბანკო მოთხოვნა ჯერ არ არის ჩართული. გასააქტიურებლად დაგვიკავშირდით — თქვენს ანგარიშზე პაკეტს მხოლოდ გადახდის დადასტურების შემდეგ ჩავრთავთ.","Online bank-transfer checkout is not enabled yet. Contact us to activate a plan; access is assigned only after payment is verified.","Онлайн-оплата переводом пока не включена. Свяжитесь с нами; тариф активируется только после проверки оплаты.")}</p></>:<ProductCatalog locale={locale}/>}</section>}
 function Profile({
   d,
@@ -2485,12 +2583,12 @@ function Admin({
   );
 }
 
-function LegalManager({busy,save}:{busy:boolean;save:(values:Parameters<ReactMutation<typeof api.legalDocuments.save>>[0])=>Promise<boolean>}){const [documentType,setDocumentType]=useState<"privacy"|"terms"|"acceptable-use">("terms"),[locale,setLocale]=useState<Locale>("ka"),stored=useQuery(api.legalDocuments.document,{documentType,locale}),fallback=legalContent[documentType][locale],doc=stored?{title:stored.title,intro:stored.intro,sections:stored.sections.map(section=>[section.heading,section.body] as [string,string])}:fallback,key=`${documentType}:${locale}:${stored?._id??"default"}`;return <form key={key} className="card legal-manager" onSubmit={event=>{event.preventDefault();const f=new FormData(event.currentTarget),sections=String(f.get("sections")??"").split(/\n---\n/).map(block=>{const [heading,...body]=block.split("\n");return {heading:heading.trim(),body:body.join("\n").trim()}}).filter(section=>section.heading&&section.body);void save({documentType,locale,title:String(f.get("title")),intro:String(f.get("intro")),sections,version:String(f.get("version"))})}}><div className="legal-manager-controls"><label>Document<select value={documentType} onChange={event=>setDocumentType(event.target.value as typeof documentType)}><option value="terms">Terms of Service</option><option value="privacy">Privacy Policy</option><option value="acceptable-use">Acceptable Use Policy</option></select></label><label>Language<select value={locale} onChange={event=>setLocale(event.target.value as Locale)}><option value="ka">Georgian</option><option value="en">English</option><option value="ru">Russian</option></select></label><label>Version<input name="version" required defaultValue={stored?.version??new Date().toISOString().slice(0,10)}/></label></div><label>Page title<input name="title" required defaultValue={doc.title}/></label><label>Introduction<textarea name="intro" required defaultValue={doc.intro}/></label><label>Sections <small>Heading on the first line, body below it. Separate sections with a line containing ---</small><textarea className="legal-sections-editor" name="sections" required defaultValue={doc.sections.map(([heading,body])=>`${heading}\n${body}`).join("\n---\n")}/></label><div className="legal-publish-note"><strong>Publishing updates the public page immediately.</strong><span>An in-app notice can be shown to signed-in users. Automated email is unavailable until a sender provider and verified domain are configured.</span></div><button className="button" disabled={busy}>Publish legal document</button></form>}
+function LegalManager({busy,save}:{busy:boolean;save:(values:Parameters<ReactMutation<typeof api.legalDocuments.save>>[0])=>Promise<boolean>}){const [documentType,setDocumentType]=useState<"privacy"|"terms"|"acceptable-use">("terms"),[locale,setLocale]=useState<Locale>("ka"),stored=useQuery(api.legalDocuments.document,{documentType,locale}),fallback=legalContent[documentType][locale],doc=stored?{title:stored.title,intro:stored.intro,sections:stored.sections.map(section=>[section.heading,section.body] as [string,string])}:fallback,key=`${documentType}:${locale}:${stored?._id??"default"}`;return <form key={key} className="card legal-manager" onSubmit={event=>{event.preventDefault();const f=new FormData(event.currentTarget),sections=String(f.get("sections")??"").split(/\n---\n/).map(block=>{const [heading,...body]=block.split("\n");return {heading:heading.trim(),body:body.join("\n").trim()}}).filter(section=>section.heading&&section.body);void save({documentType,locale,title:String(f.get("title")),intro:String(f.get("intro")),sections,version:String(f.get("version"))})}}><div className="legal-manager-controls"><label>Document<select value={documentType} onChange={event=>setDocumentType(event.target.value as typeof documentType)}><option value="terms">Terms of Service</option><option value="privacy">Privacy Policy</option><option value="acceptable-use">Acceptable Use Policy</option></select></label><label>Language<select value={locale} onChange={event=>setLocale(event.target.value as Locale)}><option value="ka">Georgian</option><option value="en">English</option><option value="ru">Russian</option></select></label><label>Version<input name="version" required defaultValue={stored?.version??new Date().toISOString().slice(0,10)}/></label></div><label>Page title<input name="title" required defaultValue={doc.title}/></label><label>Introduction<textarea name="intro" required defaultValue={doc.intro}/></label><label>Sections <small>Heading on the first line, body below it. Separate sections with a line containing ---</small><textarea className="legal-sections-editor" name="sections" required defaultValue={doc.sections.map(([heading,body])=>`${heading}\n${body}`).join("\n---\n")}/></label><div className="legal-publish-note"><strong>Publishing updates the public page immediately.</strong><span>Users receive the update in their in-app Notifications center.</span></div><button className="button" disabled={busy}>Publish legal document</button></form>}
 function SubscriptionSummary({subscription}:{subscription:AdminUsers[number]["subscription"]}){
   const [now]=useState(()=>Date.now());
   if(!subscription)return <div className="subscription-summary trial-state"><strong>Trial / no paid plan</strong><span>Limited trial access</span></div>;
   const expired=subscription.status==="expired"||(subscription.expiresAt??0)<=now,days=subscription.expiresAt?Math.ceil((subscription.expiresAt-now)/86400000):null;
-  return <div className={`subscription-summary ${expired?"expired-state":days!==null&&days<=7?"ending-state":"active-state"}`}><strong>{subscription.packageName??"Subscription"} · {expired?"Expired":"Active"}</strong><span>{subscription.expiresAt?`${expired?"Ended":"Ends"} ${new Intl.DateTimeFormat("en",{dateStyle:"medium"}).format(subscription.expiresAt)}${!expired&&days!==null?` · ${days} days remaining`:""}`:"No end date"}</span>{!expired&&days!==null&&days<=7?<small>Email reminders due at 7, 3, 2 and 1 days. Delivery provider is not configured.</small>:null}</div>;
+  return <div className={`subscription-summary ${expired?"expired-state":days!==null&&days<=7?"ending-state":"active-state"}`}><strong>{subscription.packageName??"Subscription"} · {expired?"Expired":"Active"}</strong><span>{subscription.expiresAt?`${expired?"Ended":"Ends"} ${new Intl.DateTimeFormat("en",{dateStyle:"medium"}).format(subscription.expiresAt)}${!expired&&days!==null?` · ${days} days remaining`:""}`:"No end date"}</span>{days!==null&&days<=7?<small>A renewal reminder is visible in Notifications.</small>:null}</div>;
 }
 function SubscriptionEditor({user,packages,busy,close,assign,expire}:{user:AdminUsers[number];packages:AdminCatalog["packages"];busy:boolean;close:()=>void;assign:(values:Parameters<ReactMutation<typeof api.admin.assignSubscription>>[0])=>Promise<void>;expire:()=>Promise<void>}){
   const [now]=useState(()=>Date.now()),date=(timestamp:number)=>new Date(timestamp-new Date(timestamp).getTimezoneOffset()*60000).toISOString().slice(0,10),current=user.subscription,[startDate,setStartDate]=useState(()=>date(now)),[endDate,setEndDate]=useState(()=>{const next=new Date(now);next.setMonth(next.getMonth()+1);return date(next.getTime())}),[duration,setDuration]=useState(1),[durationUnit,setDurationUnit]=useState<"days"|"months"|"years">("months");

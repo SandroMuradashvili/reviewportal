@@ -2296,3 +2296,66 @@ h2 {
   font-size: 12px;
   line-height: 1.5;
 }
+
+.notification-list {
+  display: grid;
+  gap: 10px;
+}
+.notification-card {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  text-align: left;
+  color: var(--ink);
+}
+button.notification-card {
+  cursor: pointer;
+}
+.notification-card p {
+  margin: 5px 0;
+  color: var(--muted);
+}
+.notification-card small {
+  color: var(--muted);
+}
+.notification-card i {
+  color: var(--green);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.notification-card.unread {
+  border-left: 4px solid var(--green);
+  background: #fbfffc;
+}
+.notification-card.ending {
+  margin-bottom: 12px;
+  border-color: #ead9a5;
+  background: #fff7df;
+}
+.notification-card.urgent {
+  margin-bottom: 12px;
+  border-color: #e6b9a9;
+  background: #fff0eb;
+}
+.notification-icon {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  background: #e8f3eb;
+  color: var(--green);
+}
+@media (max-width: 640px) {
+  .notification-card {
+    grid-template-columns: 38px minmax(0, 1fr);
+  }
+  .notification-card > :last-child:not(:nth-child(2)) {
+    grid-column: 2;
+    justify-self: start;
+  }
+}

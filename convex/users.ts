@@ -81,6 +81,8 @@ export const deleteAccount = mutation({
       .withIndex("user", (q) => q.eq("userId", user._id))
       .collect();
     for (const row of acceptances) await ctx.db.delete(row._id);
+    const notifications=await ctx.db.query("notifications").withIndex("user_date",q=>q.eq("userId",user._id)).collect();
+    for(const row of notifications)await ctx.db.delete(row._id);
     const logs = await ctx.db.query("auditLogs").collect();
     for (const row of logs)
       if (row.actorId === user._id || row.targetId === user._id)
