@@ -2,9 +2,9 @@ import { ExternalLink, MessageSquareText, Users } from "lucide-react";
 import type { Locale } from "@/lib/i18n";
 
 const routingCopy = {
-  ka: { publicStars:"ყველა შეფასება",publicTitle:"Google-ზე გადასვლა",publicDetail:"Google-ის ბმული ყველასთვის თანაბრად ხელმისაწვდომია.",privateStars:"1–5 ვარსკვლავი",privateTitle:"პირადი უკუკავშირი",privateDetail:"უკუკავშირი პირადად გიზიარდებათ.",visits:"ვიზიტი",redirects:"გადასვლა",feedback:"პირადი პასუხი" },
-  en: { publicStars:"Every rating",publicTitle:"Continue to Google",publicDetail:"The Google link is equally available to everyone.",privateStars:"1–5 stars",privateTitle:"Private feedback",privateDetail:"Feedback is shared with you privately.",visits:"visits",redirects:"redirects",feedback:"private feedback" },
-  ru: { publicStars:"Любая оценка",publicTitle:"Перейти в Google",publicDetail:"Ссылка Google одинаково доступна каждому.",privateStars:"1–5 звёзд",privateTitle:"Личная обратная связь",privateDetail:"Отзыв передаётся вам лично.",visits:"визитов",redirects:"переходов",feedback:"личных отзывов" },
+  ka: { publicStars:"4–5 ვარსკვლავი",publicTitle:"სწრაფად Google-ზე",publicDetail:"Google შეფასების გვერდი დაუყოვნებლივ იხსნება.",privateStars:"1–3 ვარსკვლავი",privateTitle:"პირადი უკუკავშირი",privateDetail:"პრობლემა პირადად გიზიარდებათ.",visits:"ვიზიტი",redirects:"გადასვლა",feedback:"პირადი პასუხი" },
+  en: { publicStars:"4–5 stars",publicTitle:"Fast path to Google",publicDetail:"The Google review page opens immediately.",privateStars:"1–3 stars",privateTitle:"Private feedback",privateDetail:"Issues are shared with you privately.",visits:"visits",redirects:"redirects",feedback:"private feedback" },
+  ru: { publicStars:"4–5 звёзд",publicTitle:"Быстро в Google",publicDetail:"Страница отзывов Google открывается сразу.",privateStars:"1–3 звезды",privateTitle:"Личная обратная связь",privateDetail:"О проблеме сообщают вам лично.",visits:"визитов",redirects:"переходов",feedback:"личных отзывов" },
 } satisfies Record<Locale, Record<string, string>>;
 
 export function HeroRoutingCard({ locale }: { locale: Locale }) {
