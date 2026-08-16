@@ -12,7 +12,7 @@ describe("slugFromBusinessName",()=>{
 });
 
 describe("normalizeGoogleDestination",()=>{
-  it.each(["https://g.page/r/example/review","https://maps.app.goo.gl/example","https://www.google.com/maps/place/example","https://share.google/example","https://g.co/kgs/example"])("accepts supported Google URL %s",value=>expect(normalizeGoogleDestination(value)).toBe(value));
-  it.each(["http://google.com/maps","https://evil.example/review","javascript:alert(1)"])("rejects unsafe destination %s",value=>expect(()=>normalizeGoogleDestination(value)).toThrow());
+  it.each(["https://g.page/r/example/review","https://share.google/example","https://youtube.com/watch?v=example","https://business.example/reviews"])("accepts an HTTPS destination %s",value=>expect(normalizeGoogleDestination(value)).toBe(value));
+  it.each(["http://google.com/maps","not a url","javascript:alert(1)"])("rejects unsafe destination %s",value=>expect(()=>normalizeGoogleDestination(value)).toThrow());
   it("allows an unconfigured destination",()=>expect(normalizeGoogleDestination(undefined)).toBeUndefined());
 });
