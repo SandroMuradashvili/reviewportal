@@ -112,9 +112,10 @@ export default defineSchema({
     priceDisplay: v.optional(v.string()),
     priceGel: v.optional(v.number()),
     compareAtPriceGel: v.optional(v.number()),
-    stockQuantity: v.number(),
+    stockQuantity: v.optional(v.number()),
     available: v.boolean(),
     imageUrl: v.string(),
+    imageStorageId: v.optional(v.id("_storage")),
     sortOrder: v.number(),
   }),
   packages: defineTable({

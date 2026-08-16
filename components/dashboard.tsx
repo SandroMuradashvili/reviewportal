@@ -24,9 +24,14 @@ import {
   HelpCircle,
   LifeBuoy,
   Download,
+  MessageSquareText,
+  Star,
+  Users,
+  MousePointerClick,
+  Route,
 } from "lucide-react";
 import QRCode from "qrcode";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Locale } from "@/lib/i18n";
 import { slugFromBusinessName } from "@/lib/portal-validation";
 
@@ -257,6 +262,7 @@ export function Dashboard({ siteUrl }: { siteUrl: string }) {
     setUserState = useMutation(api.admin.setState),
     activate = useMutation(api.admin.activate),
     initializeCatalog = useMutation(api.admin.initializeCatalog),
+    generateProductImageUploadUrl = useMutation(api.admin.generateProductImageUploadUrl),
     saveProduct = useMutation(api.admin.saveProduct),
     removeProduct = useMutation(api.admin.removeProduct),
     savePackage = useMutation(api.admin.savePackage),
@@ -268,17 +274,20 @@ export function Dashboard({ siteUrl }: { siteUrl: string }) {
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false),
     [localeOverride, setLocaleOverride] = useState<Locale | null>(null);
+  const catalogChecked = useRef(false);
   useEffect(() => {
-    if (me?.user.role === "admin" && adminCatalog && !adminCatalog.products.length && !adminCatalog.packages.length)
+    if (me?.user.role === "admin" && adminCatalog && !catalogChecked.current) {
+      catalogChecked.current = true;
       void initializeCatalog({});
+    }
   }, [adminCatalog, initializeCatalog, me?.user.role]);
-  const portals = data?.portals ?? [],
+  const portals = data?.portals ?? [],activePortal=selectedPortal === "all" ? portals[0]?._id ?? "all" : selectedPortal,
     filteredFeedback = useMemo(
       () =>
         data?.recent.filter(
-          (row) => selectedPortal === "all" || row.portalId === selectedPortal,
+          (row) => activePortal === "all" || row.portalId === activePortal,
         ) ?? [],
-      [data, selectedPortal],
+      [activePortal, data],
     );
   const locale = localeOverride ?? me?.user.locale ?? "ka";
   const d = dashboardCopy[locale];
@@ -317,6 +326,10 @@ export function Dashboard({ siteUrl }: { siteUrl: string }) {
   const trialLimit = me.subscription.trialLimit ?? 10,
     totalUsed = data.portals.reduce((sum, p) => sum + p.submissionCount, 0),
     remaining = Math.max(0, trialLimit - totalUsed);
+  const portalScope = data.portalMetrics.find((item) => item.portalId === activePortal),
+    scopedData = portalScope
+      ? { ...data, metrics: portalScope.metrics, daily: portalScope.daily, ratingDistribution: portalScope.ratingDistribution }
+      : data;
   return (
     <main className="dashboard-shell">
       <aside className="sidebar">
@@ -414,14 +427,12 @@ export function Dashboard({ siteUrl }: { siteUrl: string }) {
         ) : null}
         {view === "overview" ? (
           <>
-            <Overview locale={locale} data={data} setView={setView} />
-            <DailyChart locale={locale} daily={data.daily} />
+            <PortalScope locale={locale} portals={portals} value={activePortal} onChange={setSelectedPortal} />
+            <Overview locale={locale} data={scopedData} setView={setView} />
+            <DailyChart locale={locale} daily={scopedData.daily} />
             <Feedback
               locale={locale}
               rows={filteredFeedback}
-              portals={portals}
-              selectedPortal={selectedPortal}
-              setSelectedPortal={setSelectedPortal}
               busy={busy}
               act={act}
               setFeedbackStatus={setFeedbackStatus}
@@ -466,6 +477,7 @@ export function Dashboard({ siteUrl }: { siteUrl: string }) {
             setUserState={setUserState}
             activate={activate}
             saveProduct={saveProduct}
+            generateProductImageUploadUrl={generateProductImageUploadUrl}
             removeProduct={removeProduct}
             savePackage={savePackage}
             removePackage={removePackage}
@@ -474,6 +486,13 @@ export function Dashboard({ siteUrl }: { siteUrl: string }) {
       </section>
     </main>
   );
+}
+
+function PortalScope({ locale, portals, value, onChange }: { locale: Locale; portals: Portal[]; value: string; onChange: (value: string) => void }) {
+  return <section className="portal-scope" aria-label={tr(locale,"არჩეული პორტალი","Selected portal","Выбранный портал")}>
+    <div><span>{tr(locale,"ანალიტიკა და უკუკავშირი","Analytics and feedback","Аналитика и отзывы")}</span><strong>{portals.find((portal) => portal._id === value)?.name ?? tr(locale,"აირჩიეთ პორტალი","Choose a portal","Выберите портал")}</strong></div>
+    <div className="portal-scope-options">{portals.map((portal) => <button key={portal._id} className={portal._id === value ? "active" : ""} onClick={() => onChange(portal._id)}>{portal.name}</button>)}</div>
+  </section>;
 }
 
 function Nav({
@@ -508,6 +527,7 @@ function Overview({
       <SetupGuide locale={locale} data={data} setView={setView} />
       <div className="metrics dashboard-metrics">
         <Metric
+          icon={MessageSquareText}
           label={tr(
             locale,
             "სულ უკუკავშირი",
@@ -523,6 +543,7 @@ function Overview({
           )}
         />
         <Metric
+          icon={Star}
           label={tr(
             locale,
             "საშუალო შეფასება",
@@ -538,6 +559,7 @@ function Overview({
           )}
         />
         <Metric
+          icon={CheckCircle2}
           label={tr(
             locale,
             "კმაყოფილი მომხმარებლები",
@@ -553,6 +575,7 @@ function Overview({
           )}
         />
         <Metric
+          icon={Users}
           label={tr(
             locale,
             "უნიკალური ვიზიტორები",
@@ -568,6 +591,7 @@ function Overview({
           )}
         />
         <Metric
+          icon={MousePointerClick}
           label={tr(locale, "კონვერსია", "Conversion", "Конверсия")}
           value={`${data.metrics.conversion.toFixed(0)}%`}
           detail={tr(
@@ -578,6 +602,7 @@ function Overview({
           )}
         />
         <Metric
+          icon={Route}
           label={tr(locale, "გადასვლები", "Redirects", "Переходы")}
           value={String(data.metrics.redirects)}
           detail={tr(
@@ -1523,9 +1548,6 @@ const categoryLabels = {
 function Feedback({
   locale,
   rows,
-  portals,
-  selectedPortal,
-  setSelectedPortal,
   busy,
   act,
   setFeedbackStatus,
@@ -1533,23 +1555,25 @@ function Feedback({
 }: {
   locale: Locale;
   rows: FeedbackRow[];
-  portals: Portal[];
-  selectedPortal: string;
-  setSelectedPortal: (id: string) => void;
   busy: boolean;
   act: Act;
   setFeedbackStatus: ReactMutation<typeof api.feedback.setStatus>;
   removeFeedback: ReactMutation<typeof api.feedback.removeMany>;
 }) {
-  const [ratingFilter, setRatingFilter] = useState("all"),
+  const [minRating, setMinRating] = useState(1),
+    [maxRating, setMaxRating] = useState(5),
+    [statusFilter, setStatusFilter] = useState<"all" | "unread" | "unresolved" | "resolved">("all"),
     [categoryFilter, setCategoryFilter] = useState("all"),
     [days, setDays] = useState("all"),
     [selected, setSelected] = useState<FeedbackRow["_id"][]>([]),
+    [selecting, setSelecting] = useState(false),
+    [deleteRequest, setDeleteRequest] = useState<string | null>(null),
     [opened, setOpened] = useState<FeedbackRow | null>(null),
     [filterNow] = useState(() => Date.now());
   const filtered = rows.filter(
     (row) =>
-      (ratingFilter === "all" || row.rating === Number(ratingFilter)) &&
+      row.rating >= minRating && row.rating <= maxRating &&
+      (statusFilter === "all" || statusFilter === "unresolved" && (row.status === "read" || row.status === "unread") || row.status === statusFilter) &&
       (categoryFilter === "all" ||
         row.issueCategories?.includes(
           categoryFilter as NonNullable<FeedbackRow["issueCategories"]>[number],
@@ -1567,45 +1591,7 @@ function Feedback({
   }
   async function deleteMode(mode: string) {
     if (!mode) return;
-    const labels: { [key: string]: string } = {
-      selected: tr(
-        locale,
-        "მონიშნული უკუკავშირი",
-        "selected feedback",
-        "выбранные отзывы",
-      ),
-      all: tr(locale, "ყველა უკუკავშირი", "all feedback", "все отзывы"),
-      month: tr(
-        locale,
-        "ერთ თვეზე ძველი უკუკავშირი",
-        "feedback older than one month",
-        "отзывы старше месяца",
-      ),
-      six: tr(
-        locale,
-        "ექვს თვეზე ძველი უკუკავშირი",
-        "feedback older than six months",
-        "отзывы старше шести месяцев",
-      ),
-      year: tr(
-        locale,
-        "ერთ წელზე ძველი უკუკავშირი",
-        "feedback older than one year",
-        "отзывы старше года",
-      ),
-    };
     if (mode === "selected" && !selected.length) return;
-    if (
-      !window.confirm(
-        tr(
-          locale,
-          `ნამდვილად გსურთ ${labels[mode]} სამუდამოდ წაშლა?`,
-          `Permanently delete ${labels[mode]}? This cannot be undone.`,
-          `Удалить ${labels[mode]} навсегда? Это действие нельзя отменить.`,
-        ),
-      )
-    )
-      return;
     const older =
         mode === "month"
           ? 30
@@ -1691,54 +1677,13 @@ function Feedback({
             )}
           </p>
         </div>
-        <button className="button secondary" onClick={exportRows}>
-          <Download size={16} />
-          {tr(locale, "CSV ექსპორტი", "Export CSV", "Экспорт CSV")}
-        </button>
+      </div>
+      <div className="feedback-tabs" role="tablist">
+        {(["all","unread","unresolved","resolved"] as const).map((status) => <button role="tab" aria-selected={statusFilter === status} className={statusFilter === status ? "active" : ""} key={status} onClick={() => setStatusFilter(status)}>{tr(locale,status === "all" ? "ყველა" : status === "unread" ? "უნახავი" : status === "unresolved" ? "მოუგვარებელი" : "მოგვარებული",status === "all" ? "All" : status === "unread" ? "Unseen" : status === "unresolved" ? "Unresolved" : "Resolved",status === "all" ? "Все" : status === "unread" ? "Новые" : status === "unresolved" ? "Нерешённые" : "Решённые")}</button>)}
       </div>
       <div className="feedback-toolbar card">
-        <select
-          className="select"
-          value={selectedPortal}
-          onChange={(e) => setSelectedPortal(e.target.value)}
-        >
-          <option value="all">
-            {tr(locale, "ყველა პორტალი", "All portals", "Все порталы")}
-          </option>
-          {portals.map((p) => (
-            <option value={p._id} key={p._id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-        <select
-          className="select"
-          value={ratingFilter}
-          onChange={(e) => setRatingFilter(e.target.value)}
-        >
-          <option value="all">
-            {tr(locale, "ყველა შეფასება", "All ratings", "Все оценки")}
-          </option>
-          {[5, 4, 3, 2, 1].map((rating) => (
-            <option value={rating} key={rating}>
-              {rating} ★
-            </option>
-          ))}
-        </select>
-        <select
-          className="select"
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-        >
-          <option value="all">
-            {tr(locale, "ყველა კატეგორია", "All categories", "Все категории")}
-          </option>
-          {Object.entries(categoryLabels[locale]).map(([value, label]) => (
-            <option value={value} key={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+        <div className="rating-range"><span>{tr(locale,"რეიტინგი","Rating","Рейтинг")}: {minRating}–{maxRating} ★</span><div className="rating-range-controls"><input aria-label="Minimum rating" type="range" min="1" max="5" value={minRating} onChange={(e) => setMinRating(Math.min(Number(e.target.value),maxRating))}/><input aria-label="Maximum rating" type="range" min="1" max="5" value={maxRating} onChange={(e) => setMaxRating(Math.max(Number(e.target.value),minRating))}/></div><div className="rating-ticks">{[1,2,3,4,5].map(n=><span key={n}>{n}</span>)}</div></div>
+        <details className="filter-menu"><summary>{categoryFilter === "all" ? tr(locale,"ყველა კატეგორია","All categories","Все категории") : categoryLabels[locale][categoryFilter as keyof typeof categoryLabels[typeof locale]]}</summary><div><button className={categoryFilter === "all" ? "active" : ""} onClick={() => setCategoryFilter("all")}>{tr(locale,"ყველა კატეგორია","All categories","Все категории")}</button>{Object.entries(categoryLabels[locale]).map(([value,label])=><button className={categoryFilter === value ? "active" : ""} key={value} onClick={() => setCategoryFilter(value)}>{label}</button>)}</div></details>
         <select
           className="select"
           value={days}
@@ -1757,68 +1702,17 @@ function Feedback({
             {tr(locale, "ბოლო 90 დღე", "Last 90 days", "Последние 90 дней")}
           </option>
         </select>
-        <select
-          className="select danger-select"
-          defaultValue=""
-          onChange={(e) => {
-            void deleteMode(e.target.value);
-            e.target.value = "";
-          }}
-        >
-          <option value="">
-            {tr(
-              locale,
-              "წაშლის მოქმედებები…",
-              "Delete options…",
-              "Варианты удаления…",
-            )}
-          </option>
-          <option value="selected">
-            {tr(
-              locale,
-              `მონიშნულის წაშლა (${selected.length})`,
-              `Delete selected (${selected.length})`,
-              `Удалить выбранные (${selected.length})`,
-            )}
-          </option>
-          <option value="all">
-            {tr(locale, "ყველაფრის წაშლა", "Delete all", "Удалить всё")}
-          </option>
-          <option value="month">
-            {tr(
-              locale,
-              "1 თვეზე ძველის წაშლა",
-              "Delete older than 1 month",
-              "Удалить старше 1 месяца",
-            )}
-          </option>
-          <option value="six">
-            {tr(
-              locale,
-              "6 თვეზე ძველის წაშლა",
-              "Delete older than 6 months",
-              "Удалить старше 6 месяцев",
-            )}
-          </option>
-          <option value="year">
-            {tr(
-              locale,
-              "1 წელზე ძველის წაშლა",
-              "Delete older than 1 year",
-              "Удалить старше 1 года",
-            )}
-          </option>
-        </select>
+        <div className="feedback-actions"><button className={`button secondary ${selecting ? "active" : ""}`} onClick={() => {setSelecting(!selecting);setSelected([])}}>{selecting ? tr(locale,"დასრულება","Done","Готово") : tr(locale,"არჩევა","Select","Выбрать")}</button>{selecting?<><button className="button secondary" onClick={() => setSelected(selected.length === filtered.length ? [] : filtered.map(row=>row._id))}>{selected.length === filtered.length ? tr(locale,"არჩევის მოხსნა","Clear","Снять") : tr(locale,"ყველას არჩევა","Select all","Выбрать все")}</button><button className="button secondary" disabled={!selected.length||busy} onClick={() => void act(()=>Promise.all(selected.map(feedbackId=>setFeedbackStatus({feedbackId,status:"resolved"}))),tr(locale,"მონიშნული მოგვარებულია.","Selected feedback resolved.","Выбранные отзывы решены.")).then(ok=>{if(ok)setSelected([])})}><CheckCircle2 size={16}/>{tr(locale,"მოგვარება","Resolve","Решить")}</button></>:null}<button className="button secondary" onClick={exportRows}><Download size={16}/>{tr(locale,"ექსპორტი","Export","Экспорт")}</button><button className="button secondary danger-button" disabled={!selected.length} onClick={() => setDeleteRequest("selected")}><Trash2 size={16}/>{tr(locale,"წაშლა","Delete","Удалить")} {selected.length ? `(${selected.length})` : ""}</button></div>
       </div>
       {filtered.length ? (
         <div className="feedback-cards">
           {filtered.map((row) => (
             <article
-              className={`card feedback-item clickable ${row.status === "unread" ? "is-unread" : ""}`}
+              className={`card feedback-item clickable ${selecting ? "is-selecting" : ""} ${row.status === "unread" ? "is-unread" : ""}`}
               key={row._id}
               onClick={() => void open(row)}
             >
-              <label
+              {selecting ? <label
                 className="feedback-check"
                 onClick={(e) => e.stopPropagation()}
               >
@@ -1833,7 +1727,7 @@ function Feedback({
                     )
                   }
                 />
-              </label>
+              </label> : null}
               <span
                 className="unread-dot"
                 aria-label={row.status === "unread" ? "Unread" : undefined}
@@ -1906,20 +1800,16 @@ function Feedback({
                 "Статус обновлён.",
               ),
             );
-            if (ok) setOpened({ ...opened, status });
+            if (ok) {
+              if (status === "resolved") setOpened(null);
+              else setOpened({ ...opened, status });
+            }
           }}
-          remove={async () => {
-            if (
-              !window.confirm(
-                tr(
-                  locale,
-                  "სამუდამოდ წავშალოთ ეს უკუკავშირი?",
-                  "Permanently delete this feedback?",
-                  "Удалить этот отзыв навсегда?",
-                ),
-              )
-            )
-              return;
+          remove={async () => setDeleteRequest("opened")}
+        />
+      ) : null}
+      {deleteRequest ? <div className="dashboard-modal-backdrop"><section className="dashboard-modal danger-dialog card" role="alertdialog" aria-modal="true"><div className="modal-head"><div><span className="eyebrow">{tr(locale,"შეუქცევადი მოქმედება","Permanent action","Необратимое действие")}</span><h2>{tr(locale,"წავშალოთ უკუკავშირი?","Delete feedback?","Удалить отзывы?")}</h2></div><button className="icon-button" onClick={() => setDeleteRequest(null)}><X size={20}/></button></div><p>{tr(locale,"არჩეული ჩანაწერები სამუდამოდ წაიშლება. ამ მოქმედების გაუქმება შეუძლებელია.","The selected records will be permanently deleted. This cannot be undone.","Выбранные записи будут удалены навсегда. Отменить это действие нельзя.")}</p><div className="portal-actions modal-actions"><button className="button secondary" onClick={() => setDeleteRequest(null)}>{tr(locale,"გაუქმება","Cancel","Отмена")}</button><button className="button danger-button" disabled={busy} onClick={async () => {
+        if (deleteRequest === "opened" && opened) {
             const ok = await act(
               () => removeFeedback({ feedbackIds: [opened._id] }),
               tr(
@@ -1929,10 +1819,9 @@ function Feedback({
                 "Отзыв удалён.",
               ),
             );
-            if (ok) setOpened(null);
-          }}
-        />
-      ) : null}
+            if (ok) { setOpened(null); setDeleteRequest(null); }
+        } else { await deleteMode(deleteRequest); setDeleteRequest(null); }
+      }}><Trash2 size={17}/>{tr(locale,"სამუდამოდ წაშლა","Delete permanently","Удалить навсегда")}</button></div></section></div> : null}
     </>
   );
 }
@@ -1948,7 +1837,7 @@ function FeedbackDialog({
   row: FeedbackRow;
   busy: boolean;
   close: () => void;
-  setStatus: (status: "read" | "resolved" | "archived") => Promise<void>;
+  setStatus: (status: "read" | "resolved") => Promise<void>;
   remove: () => Promise<void>;
 }) {
   return (
@@ -2001,13 +1890,6 @@ function FeedbackDialog({
               "Mark resolved",
               "Отметить решённым",
             )}
-          </button>
-          <button
-            className="button secondary"
-            disabled={busy}
-            onClick={() => void setStatus("archived")}
-          >
-            {tr(locale, "არქივში გადატანა", "Archive", "Архивировать")}
           </button>
           <button
             className="icon-button danger-button"
@@ -2391,6 +2273,7 @@ function Admin({
   setUserState,
   activate,
   saveProduct,
+  generateProductImageUploadUrl,
   removeProduct,
   savePackage,
   removePackage,
@@ -2402,6 +2285,7 @@ function Admin({
   setUserState: ReactMutation<typeof api.admin.setState>;
   activate: ReactMutation<typeof api.admin.activate>;
   saveProduct: ReactMutation<typeof api.admin.saveProduct>;
+  generateProductImageUploadUrl: ReactMutation<typeof api.admin.generateProductImageUploadUrl>;
   removeProduct: ReactMutation<typeof api.admin.removeProduct>;
   savePackage: ReactMutation<typeof api.admin.savePackage>;
   removePackage: ReactMutation<typeof api.admin.removePackage>;
@@ -2437,6 +2321,7 @@ function Admin({
               setProductEditor(null),
             )
           }
+          generateProductImageUploadUrl={generateProductImageUploadUrl}
         />
       ) : null}
       <div className="admin-catalog-list">
@@ -2624,6 +2509,7 @@ function ProductEditor({
   busy,
   cancel,
   save,
+  generateProductImageUploadUrl,
 }: {
   item?: AdminCatalog["products"][number];
   busy: boolean;
@@ -2631,7 +2517,9 @@ function ProductEditor({
   save: (
     values: Parameters<ReactMutation<typeof api.admin.saveProduct>>[0],
   ) => Promise<void>;
+  generateProductImageUploadUrl: ReactMutation<typeof api.admin.generateProductImageUploadUrl>;
 }) {
+  const [imageStorageId,setImageStorageId]=useState<Parameters<ReactMutation<typeof api.admin.saveProduct>>[0]["imageStorageId"]>(),[uploading,setUploading]=useState(false),[uploadError,setUploadError]=useState("");
   return (
     <form
       className="card admin-editor"
@@ -2655,9 +2543,10 @@ function ProductEditor({
           },
           priceGel: Number(f.get("price")),
           compareAtPriceGel: compare || undefined,
-          stockQuantity: Number(f.get("stock")),
+          stockQuantity: String(f.get("stock") ?? "").trim() === "" ? undefined : Number(f.get("stock")),
           available: f.get("available") === "on",
-          imageUrl: String(f.get("image")),
+          imageUrl: item?.imageUrl,
+          imageStorageId,
           sortOrder: Number(f.get("sort")),
         });
       }}
@@ -2697,12 +2586,12 @@ function ProductEditor({
           />
         </label>
         <label>
-          Stock (individual only)
+          Stock counter (leave blank to hide)
           <input
             name="stock"
             type="number"
             min="0"
-            defaultValue={item?.stockQuantity ?? 0}
+            defaultValue={item?.stockQuantity ?? ""}
           />
         </label>
         <label>
@@ -2713,13 +2602,17 @@ function ProductEditor({
             defaultValue={item?.sortOrder ?? 1}
           />
         </label>
-        <label className="wide">
-          Image path or URL
+        <label className="wide product-image-upload">
+          Product image (PNG, JPEG or WebP, maximum 2 MB)
           <input
-            name="image"
-            required
-            defaultValue={item?.imageUrl ?? "/products/stand.jpeg"}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            required={!item}
+            disabled={uploading}
+            onChange={async event=>{const file=event.target.files?.[0];if(!file)return;if(!["image/png","image/jpeg","image/webp"].includes(file.type)||file.size>2_000_000){setUploadError("Choose a PNG, JPEG or WebP image up to 2 MB.");return}setUploading(true);setUploadError("");try{const url=await generateProductImageUploadUrl({}),response=await fetch(url,{method:"POST",headers:{"Content-Type":file.type},body:file});if(!response.ok)throw new Error("Upload failed");const result=await response.json() as {storageId:Parameters<ReactMutation<typeof api.admin.saveProduct>>[0]["imageStorageId"]};setImageStorageId(result.storageId)}catch{setUploadError("The image could not be uploaded. Try again.")}finally{setUploading(false)}}}
           />
+          <small>{uploading?"Uploading…":imageStorageId?"New image ready to save.":item?"Keep the existing image or choose a replacement.":"Upload an image to continue."}</small>
+          {uploadError?<span className="field-error">{uploadError}</span>:null}
         </label>
         {(["Ka", "En", "Ru"] as const).map((code) => (
           <div className="locale-fields" key={code}>
@@ -2918,16 +2811,19 @@ function PackageEditor({
   );
 }
 function Metric({
+  icon: Icon,
   label,
   value,
   detail,
 }: {
+  icon: typeof Star;
   label: string;
   value: string;
   detail: string;
 }) {
   return (
-    <div className="metric">
+    <div className="metric dashboard-metric">
+      <span className="metric-icon"><Icon size={19}/></span>
       <span>{label}</span>
       <strong>{value}</strong>
       <small>{detail}</small>

@@ -1219,6 +1219,10 @@ h2 {
 .sidebar {
   display: flex;
   flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
 }
 .sidebar nav button {
   width: 100%;
@@ -1649,15 +1653,59 @@ h2 {
 }
 .feedback-toolbar {
   display: grid;
-  grid-template-columns: repeat(5, minmax(130px, 1fr));
+  grid-template-columns: minmax(260px, 1.3fr) minmax(170px, 0.8fr) minmax(150px, 0.7fr) auto;
   gap: 9px;
   padding: 14px;
 }
 .feedback-item.clickable {
   position: relative;
-  grid-template-columns: 24px 12px 70px 1fr auto;
+  grid-template-columns: 12px 70px 1fr auto;
   cursor: pointer;
 }
+.feedback-item.clickable.is-selecting { grid-template-columns:24px 12px 70px 1fr auto; }
+.portal-scope {
+  margin: 26px 0 8px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+}
+.portal-scope > div:first-child { display:grid; gap:4px; }
+.portal-scope span { color:var(--muted); font-size:12px; }
+.portal-scope-options,.feedback-tabs,.feedback-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.portal-scope-options button,.feedback-tabs button { border:1px solid var(--line); background:#f7f8f6; border-radius:999px; padding:9px 14px; cursor:pointer; font-weight:700; color:var(--muted); }
+.portal-scope-options button.active,.feedback-tabs button.active { background:var(--green); color:white; border-color:var(--green); }
+.feedback-tabs { margin:18px 0 10px; }
+.rating-range { display:grid; gap:6px; min-width:240px; }
+.rating-range > span { font-size:12px; font-weight:800; color:var(--ink); }
+.rating-range-controls { position:relative; height:20px; }
+.rating-range-controls input { position:absolute; inset:0; width:100%; margin:0; pointer-events:none; accent-color:var(--green); background:transparent; }
+.rating-range-controls input::-webkit-slider-thumb { pointer-events:auto; }
+.rating-range-controls input::-moz-range-thumb { pointer-events:auto; }
+.rating-ticks { display:flex; justify-content:space-between; padding:0 5px; color:var(--muted); font-size:10px; }
+.feedback-actions { align-items:center; justify-content:flex-end; }
+.feedback-actions .button { min-height:44px; padding:0 13px; }
+.feedback-actions .button.active { background:#e7f1ea; color:var(--green); }
+.filter-menu { position:relative; }
+.filter-menu summary { min-height:46px; padding:0 14px; border:1px solid var(--line); border-radius:11px; background:white; display:flex; align-items:center; cursor:pointer; font-size:13px; font-weight:700; list-style:none; }
+.filter-menu > div { position:absolute; z-index:8; top:52px; left:0; min-width:220px; padding:8px; display:grid; gap:3px; border:1px solid var(--line); border-radius:14px; background:white; box-shadow:0 18px 45px #16342424; }
+.filter-menu button { border:0; border-radius:9px; padding:9px 11px; background:transparent; text-align:left; cursor:pointer; }
+.filter-menu button:hover,.filter-menu button.active { background:#e8f3eb; color:var(--green); }
+.feedback-cards { padding-bottom:36px; }
+.dashboard-metric { position:relative; padding-left:58px; }
+.metric-icon { position:absolute; left:20px; top:20px; width:28px; height:28px; display:grid; place-items:center; border-radius:9px; background:#e8f3eb; color:var(--green) !important; }
+.bar-row:nth-of-type(2) i { background:#2f9e57; }
+.bar-row:nth-of-type(3) i { background:#77b255; }
+.bar-row:nth-of-type(4) i { background:#e4b63f; }
+.bar-row:nth-of-type(5) i { background:#e7893c; }
+.bar-row:nth-of-type(6) i { background:#d34f45; }
+.auth-consent { display:flex; align-items:flex-start; gap:10px; margin:14px 0; font-size:12px; line-height:1.5; color:var(--muted); }
+.auth-consent input { margin-top:3px; flex:0 0 auto; }
+.product-image-upload small { color:var(--muted); font-weight:500; }
 .feedback-item.clickable:hover {
   border-color: #a8c7b0;
   box-shadow: 0 8px 24px #193a2910;
@@ -1907,6 +1955,10 @@ h2 {
   .sidebar {
     padding: 16px;
     display: block;
+    position: sticky;
+    height: auto;
+    overflow: visible;
+    z-index: 20;
   }
   .sidebar .brand {
     margin-bottom: 15px;

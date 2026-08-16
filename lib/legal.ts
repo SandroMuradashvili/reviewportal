@@ -162,6 +162,10 @@ export const legalContent: MultilingualLegalContent = {
           "არ ვიძლევით შეფასებების რაოდენობის, საშუალო ქულის, რეიტინგის, შემოსავლის ან Google-ში უწყვეტი ხელმისაწვდომობის გარანტიას. ვიზიტები, მოწყობილობები და გადამისამართებები ტექნიკური შეფასებებია და არა დადასტურებული საჯარო მიმოხილვები.",
         ],
         [
+          "პაკეტები და ხელით გადახდა",
+          "ფიქსირებული პაკეტის ფასი, ვადა და ფუნქციები შეკვეთის დროს ნაჩვენები პირობებით განისაზღვრება; ინდივიდუალური პაკეტი ცალკე შეთავაზებას საჭიროებს. საბანკო გადარიცხვის მონიშვნა ან საცნობარო კოდი გადახდის მტკიცებულება არ არის. მომსახურება აქტიურდება მხოლოდ თანხის მიღების გადამოწმების შემდეგ. ფიზიკური პროდუქტის ხელმისაწვდომობა და მიწოდება წინასწარ თანხმდება.",
+        ],
+        [
           "პასუხისმგებლობა",
           "კანონით დაშვებულ ფარგლებში მხარეები არ აგებენ პასუხს არაპირდაპირ ან გაუთვალისწინებელ ზიანზე. ReviewPortal-ის ჯამური სახელშეკრულებო პასუხისმგებლობა არ აღემატება მოთხოვნამდე ბოლო სამი თვის განმავლობაში შესაბამის მომსახურებაში გადახდილ თანხას. ეს არ ვრცელდება განზრახ ქმედებაზე, უხეშ გაუფრთხილებლობაზე, ჯანმრთელობის ზიანზე, მონაცემთა დაცვის დარღვევაზე ან სხვა პასუხისმგებლობაზე, რომლის გამორიცხვაც დაუშვებელია.",
         ],
@@ -205,6 +209,10 @@ export const legalContent: MultilingualLegalContent = {
           "We do not guarantee review volume, average score, ranking, revenue, or uninterrupted availability on Google. Visits, device counts and outbound clicks are technical estimates, not verified public reviews.",
         ],
         [
+          "Plans and manual payments",
+          "A fixed plan is governed by the price, term and features shown when ordered; a custom plan requires a separate offer. Marking a bank transfer as paid or receiving a reference code is not proof of payment. Service is activated only after ReviewPortal verifies receipt of cleared funds. Physical-product availability and delivery are agreed separately.",
+        ],
+        [
           "Liability",
           "To the extent permitted by law, neither party is liable for indirect or unforeseeable loss. ReviewPortal’s aggregate contractual liability is capped at fees paid for the affected service in the three months before the claim. The cap does not apply to fraud, wilful misconduct, gross negligence, injury, data-protection liability, or anything else that law does not permit us to exclude.",
         ],
@@ -246,6 +254,10 @@ export const legalContent: MultilingualLegalContent = {
         [
           "Без гарантии результата",
           "Мы не гарантируем число или среднюю оценку отзывов, рейтинг, доход или постоянную доступность в Google. Визиты, устройства и переходы — технические показатели, а не подтверждённые публичные отзывы.",
+        ],
+        [
+          "Тарифы и ручная оплата",
+          "Для стандартного тарифа действуют цена, срок и функции, показанные при заказе; индивидуальный тариф требует отдельного предложения. Отметка о банковском переводе или получение кода не подтверждают оплату. Услуга активируется только после проверки фактического поступления средств. Наличие и доставка физических товаров согласуются отдельно.",
         ],
         [
           "Ответственность",

@@ -107,6 +107,32 @@ export const overview = query({
         rating,
         count: feedbackRows.filter((row) => row.rating === rating).length,
       })),
+      portalMetrics: portals.map((portal) => {
+        const rows = feedbackRows.filter((row) => row.portalId === portal._id),
+          portalVisits = visits.filter((visit) => visit.portalId === portal._id),
+          portalRedirects = events.filter(
+            (event) => event.portalId === portal._id && event.type === "redirect_clicked",
+          ).length,
+          total = rows.length;
+        return {
+          portalId: portal._id,
+          metrics: {
+            total,
+            average: total ? rows.reduce((sum, row) => sum + row.rating, 0) / total : 0,
+            happy: total ? (rows.filter((row) => row.rating >= 4).length / total) * 100 : 0,
+            uniqueVisitors: portalVisits.length,
+            conversion: portalVisits.length ? (total / portalVisits.length) * 100 : 0,
+            redirects: portalRedirects,
+          },
+          daily: daily.map((day) => {
+            const dayRows = rows.filter(
+              (row) => row.submittedAt >= day.date && row.submittedAt < day.date + dayMs,
+            );
+            return { date: day.date, total: dayRows.length, ratings: [1, 2, 3, 4, 5].map((rating) => dayRows.filter((row) => row.rating === rating).length) };
+          }),
+          ratingDistribution: [1, 2, 3, 4, 5].map((rating) => ({ rating, count: rows.filter((row) => row.rating === rating).length })),
+        };
+      }),
       portalCount: portalIds.size,
     };
   },
