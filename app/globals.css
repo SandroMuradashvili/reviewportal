@@ -92,6 +92,10 @@ a {
   transform: translateY(-1px);
   filter: brightness(1.06);
 }
+.button:active:not(:disabled) { transform:translateY(1px) scale(.975); filter:brightness(.94); }
+.button:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visible { outline:3px solid #8fd4a6; outline-offset:3px; }
+.button:disabled,button:disabled { cursor:not-allowed; opacity:.48; transform:none !important; filter:none !important; }
+button { transition:background-color .16s ease,color .16s ease,border-color .16s ease,transform .12s ease,box-shadow .16s ease; }
 .button.secondary {
   background: transparent;
   color: var(--ink);
@@ -1682,10 +1686,10 @@ h2 {
 .feedback-tabs { margin:18px 0 10px; }
 .rating-range { display:grid; gap:5px; min-width:190px; max-width:290px; }
 .rating-range > span { font-size:12px; font-weight:800; color:var(--ink); }
-.rating-range-controls { position:relative; height:16px; background:linear-gradient(to right,#dfe5e0 0 var(--range-start),var(--green) var(--range-start) var(--range-end),#dfe5e0 var(--range-end) 100%); border-radius:99px; }
-.rating-range-controls input { appearance:none; position:absolute; inset:-2px 0 0; width:100%; margin:0; pointer-events:none; background:transparent; }
+.rating-range-controls { position:relative; height:18px; background:linear-gradient(to right,#dfe5e0 0 var(--range-start),var(--green) var(--range-start) var(--range-end),#dfe5e0 var(--range-end) 100%) center/100% 8px no-repeat; border-radius:99px; }
+.rating-range-controls input { appearance:none; position:absolute; inset:0; width:100%; height:18px; margin:0; pointer-events:none; background:transparent; }
 .rating-range-controls input::-webkit-slider-runnable-track { height:0; background:transparent; }
-.rating-range-controls input::-webkit-slider-thumb { appearance:none; width:16px; height:16px; border:3px solid white; border-radius:50%; background:var(--green); box-shadow:0 1px 5px #102a1d55; }
+.rating-range-controls input::-webkit-slider-thumb { appearance:none; width:18px; height:18px; margin-top:-9px; border:3px solid white; border-radius:50%; background:var(--green); box-shadow:0 1px 5px #102a1d55; }
 .rating-range-controls input::-moz-range-track { height:0; background:transparent; }
 .rating-range-controls input::-moz-range-thumb { width:12px; height:12px; border:3px solid white; border-radius:50%; background:var(--green); box-shadow:0 1px 5px #102a1d55; }
 .rating-range-controls input::-webkit-slider-thumb { pointer-events:auto; }
@@ -1739,6 +1743,21 @@ h2 {
 .legal-publish-note { padding:12px 14px; display:grid; gap:3px; border-radius:10px; background:#fff5d9; color:#725810; font-size:12px; }
 .legal-update-notice { margin:16px 0; padding:12px 15px; display:flex; gap:10px; align-items:center; border:1px solid #cbdccf; border-radius:12px; background:#eef7f0; color:var(--green); font-size:13px; }
 .legal-update-notice a { margin-left:auto; font-weight:800; }
+.dashboard-shop { padding-bottom:40px; }
+.dashboard-shop .plans,.dashboard-shop .product-grid { margin-top:22px; }
+.shop-payment-note { margin-top:18px; padding:14px 16px; border-radius:12px; background:#fff5d9; color:#725810; font-size:13px; line-height:1.6; }
+.activation-meter { max-width:650px; margin-bottom:18px; display:grid; gap:14px; }
+.activation-meter > div:first-child { display:grid; gap:4px; }
+.activation-meter > div:first-child span { color:var(--muted); font-size:12px; }
+.activation-track { height:10px; overflow:hidden; border-radius:99px; background:#e1e7e2; }
+.activation-track i { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,var(--green),#62ae72); }
+.activation-meta { display:flex; justify-content:space-between; gap:12px; color:var(--muted); font-size:12px; }
+.activation-meta strong { color:var(--ink); }
+.activation-meter .button { justify-self:start; }
+.duration-shortcut { display:grid; grid-template-columns:110px 140px 1fr; gap:10px; align-items:end; padding:12px; border-radius:12px; background:#f3f6f3; }
+.icon-button:active:not(:disabled),.sidebar nav button:active,.portal-scope-options button:active,.feedback-tabs button:active,.filter-menu button:active { transform:scale(.94); }
+.sidebar nav button:hover { background:#ffffff0d; color:white; }
+.icon-button:hover { border-color:#9bb5a2; background:#f4f8f5; box-shadow:0 4px 12px #183d2914; }
 .feedback-item.clickable:hover {
   border-color: #a8c7b0;
   box-shadow: 0 8px 24px #193a2910;

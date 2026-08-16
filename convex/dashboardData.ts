@@ -61,6 +61,7 @@ export const overview = query({
       redirects = events.filter(
         (event) => event.type === "redirect_clicked",
       ).length,
+      privateResolutions=feedbackRows.filter(row=>row.rating<=3&&!events.some(event=>event.visitId===row.visitId&&event.type==="redirect_clicked")).length,
       dayMs = 86400000,
       today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -96,6 +97,7 @@ export const overview = query({
         uniqueVisitors: visits.length,
         conversion: visits.length ? (total / visits.length) * 100 : 0,
         redirects,
+        privateResolutions,
       },
       recent: feedbackRows.map((row) => ({
         ...row,
@@ -113,6 +115,7 @@ export const overview = query({
           portalRedirects = events.filter(
             (event) => event.portalId === portal._id && event.type === "redirect_clicked",
           ).length,
+          privateResolutions=rows.filter(row=>row.rating<=3&&!events.some(event=>event.visitId===row.visitId&&event.type==="redirect_clicked")).length,
           total = rows.length;
         return {
           portalId: portal._id,
@@ -123,6 +126,7 @@ export const overview = query({
             uniqueVisitors: portalVisits.length,
             conversion: portalVisits.length ? (total / portalVisits.length) * 100 : 0,
             redirects: portalRedirects,
+            privateResolutions,
           },
           daily: daily.map((day) => {
             const dayRows = rows.filter(

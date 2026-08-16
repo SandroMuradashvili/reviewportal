@@ -27,20 +27,23 @@ import {
   MessageSquareText,
   Star,
   Users,
-  MousePointerClick,
   Route,
+  CreditCard,
 } from "lucide-react";
 import QRCode from "qrcode";
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import { Locale } from "@/lib/i18n";
 import { slugFromBusinessName } from "@/lib/portal-validation";
 import { legalContent } from "@/lib/legal";
+import { PlanCatalog, ProductCatalog } from "@/components/catalog";
+import { whatsapp } from "@/lib/data";
 
-type View = "overview" | "portals" | "settings" | "support" | "admin";
+type View = "overview" | "portals" | "subscriptions" | "products" | "profile" | "support" | "admin";
 type DashboardData = FunctionReturnType<typeof api.dashboardData.overview>;
 type Portal = DashboardData["portals"][number];
 type FeedbackRow = DashboardData["recent"][number];
 type User = FunctionReturnType<typeof api.users.me>["user"];
+type Subscription = FunctionReturnType<typeof api.users.me>["subscription"] & {startsAt?:number;expiresAt?:number;packageName?:string};
 type AdminUsers = FunctionReturnType<typeof api.admin.users>;
 type AdminCatalog = FunctionReturnType<typeof api.admin.catalog>;
 type Act = (task: () => Promise<unknown>, success: string) => Promise<boolean>;
@@ -354,12 +357,9 @@ export function Dashboard({ siteUrl }: { siteUrl: string }) {
             icon={Building2}
             label={d.portals}
           />
-          <Nav
-            active={view === "settings"}
-            onClick={() => setView("settings")}
-            icon={Settings}
-            label={d.settings}
-          />
+          <Nav active={view === "subscriptions"} onClick={() => setView("subscriptions")} icon={CreditCard} label={tr(locale,"პაკეტები","Subscriptions","Подписки")}/>
+          <Nav active={view === "products"} onClick={() => setView("products")} icon={ShoppingBag} label={tr(locale,"პროდუქტები","Products","Товары")}/>
+          <Nav active={view === "profile"} onClick={() => setView("profile")} icon={Settings} label={tr(locale,"პროფილი","Profile","Профиль")}/>
           <Nav
             active={view === "support"}
             onClick={() => setView("support")}
@@ -463,7 +463,9 @@ export function Dashboard({ siteUrl }: { siteUrl: string }) {
             siteUrl={siteUrl}
           />
         ) : null}
-        {view === "settings" ? (
+        {view === "subscriptions"?<DashboardShop locale={locale} kind="subscriptions"/>:null}
+        {view === "products"?<DashboardShop locale={locale} kind="products"/>:null}
+        {view === "profile" ? (
           <Profile
             d={d}
             locale={locale}
@@ -473,6 +475,7 @@ export function Dashboard({ siteUrl }: { siteUrl: string }) {
             updateProfile={updateProfile}
             deleteAccount={deleteAccount}
             signOut={signOut}
+            subscription={me.subscription}
           />
         ) : null}
         {view === "support" ? <Support locale={locale} /> : null}
@@ -601,14 +604,14 @@ function Overview({
           )}
         />
         <Metric
-          icon={MousePointerClick}
-          label={tr(locale, "კონვერსია", "Conversion", "Конверсия")}
-          value={`${data.metrics.conversion.toFixed(0)}%`}
+          icon={MessageSquareText}
+          label={tr(locale, "პირადად დარჩენილი პრობლემები", "Private resolutions", "Остались приватными")}
+          value={String(data.metrics.privateResolutions)}
           detail={tr(
             locale,
-            "პასუხები ÷ ვიზიტორები",
-            "Feedback ÷ visitors",
-            "Отзывы ÷ посетители",
+            "1–3★ პასუხი გარე ბმულზე გადასვლის გარეშე",
+            "1–3★ feedback without an outbound click",
+            "Отзывы 1–3★ без перехода наружу",
           )}
         />
         <Metric
@@ -2030,6 +2033,7 @@ export function QrTools({
     </>
   );
 }
+function DashboardShop({locale,kind}:{locale:Locale;kind:"subscriptions"|"products"}){return <section className="dashboard-shop"><div className="section-head compact"><div><h2 className="dash-section-title">{kind==="subscriptions"?tr(locale,"პაკეტები და განახლება","Subscriptions and renewal","Подписки и продление"):tr(locale,"ReviewPortal პროდუქტები","ReviewPortal products","Товары ReviewPortal")}</h2><p>{kind==="subscriptions"?tr(locale,"აირჩიეთ სტანდარტული პაკეტი ან მოგვწერეთ ინდივიდუალური პირობებისთვის.","Choose the standard plan or contact us for custom terms.","Выберите стандартный тариф или свяжитесь с нами для индивидуальных условий."):tr(locale,"QR და NFC პროდუქტები თქვენი უკუკავშირის პორტალებისთვის.","QR and NFC products for your feedback portals.","QR- и NFC-товары для ваших порталов.")}</p></div></div>{kind==="subscriptions"?<><PlanCatalog locale={locale}/><p className="shop-payment-note">{tr(locale,"ონლაინ საბანკო მოთხოვნა ჯერ არ არის ჩართული. გასააქტიურებლად დაგვიკავშირდით — თქვენს ანგარიშზე პაკეტს მხოლოდ გადახდის დადასტურების შემდეგ ჩავრთავთ.","Online bank-transfer checkout is not enabled yet. Contact us to activate a plan; access is assigned only after payment is verified.","Онлайн-оплата переводом пока не включена. Свяжитесь с нами; тариф активируется только после проверки оплаты.")}</p></>:<ProductCatalog locale={locale}/>}</section>}
 function Profile({
   d,
   locale,
@@ -2039,6 +2043,7 @@ function Profile({
   updateProfile,
   deleteAccount,
   signOut,
+  subscription,
 }: {
   d: DashboardCopy;
   locale: Locale;
@@ -2048,9 +2053,11 @@ function Profile({
   updateProfile: ReactMutation<typeof api.users.updateProfile>;
   deleteAccount: ReactMutation<typeof api.users.deleteAccount>;
   signOut: () => Promise<void>;
+  subscription: Subscription;
 }) {
-  const [showDelete, setShowDelete] = useState(false),
+  const [showDelete, setShowDelete] = useState(false),[now]=useState(()=>Date.now()),
     [confirmation, setConfirmation] = useState("");
+  const start=subscription.startsAt??now,end=subscription.expiresAt,duration=end?Math.max(1,end-start):1,elapsed=end?Math.max(0,Math.min(100,((now-start)/duration)*100)):0,days=end?Math.max(0,Math.ceil((end-now)/86400000)):null;
   return (
     <>
       <div className="section-head compact">
@@ -2059,6 +2066,7 @@ function Profile({
           <p>{d.profileIntro}</p>
         </div>
       </div>
+      <section className="card activation-meter"><div><span>{tr(locale,"პაკეტის წვდომა","Subscription access","Доступ по подписке")}</span><strong>{subscription.status==="trial"?tr(locale,"საცდელი რეჟიმი","Trial access","Пробный доступ"):subscription.packageName??tr(locale,"პაკეტი","Plan","Тариф")}</strong></div>{end?<><div className="activation-track"><i style={{width:`${elapsed}%`}}/></div><div className="activation-meta"><span>{new Intl.DateTimeFormat(locale==="ka"?"ka-GE":locale==="ru"?"ru-RU":"en",{dateStyle:"medium"}).format(start)}</span><strong>{days} {tr(locale,"დღე დარჩა","days left","дней осталось")}</strong><span>{new Intl.DateTimeFormat(locale==="ka"?"ka-GE":locale==="ru"?"ru-RU":"en",{dateStyle:"medium"}).format(end)}</span></div></>:<p>{tr(locale,"აქტიური ფასიანი ვადა ჯერ არ არის მინიჭებული.","No paid access period has been assigned yet.","Платный период пока не назначен.")}</p>}<a className="button secondary" target="_blank" rel="noreferrer" href={whatsapp("Hello ReviewPortal, I would like to renew my subscription.")}>{tr(locale,"განახლებისთვის დაგვიკავშირდით","Contact us to renew","Связаться для продления")}</a></section>
       <form
         className="card settings-form"
         onSubmit={(event) => {
@@ -2439,6 +2447,7 @@ function Admin({
               <button
                 className="button secondary"
                 disabled={busy}
+                title="Suspension blocks the user from signing in. It does not delete their data."
                 onClick={() =>
                   void act(
                     () =>
@@ -2483,8 +2492,9 @@ function SubscriptionSummary({subscription}:{subscription:AdminUsers[number]["su
   return <div className={`subscription-summary ${expired?"expired-state":days!==null&&days<=7?"ending-state":"active-state"}`}><strong>{subscription.packageName??"Subscription"} · {expired?"Expired":"Active"}</strong><span>{subscription.expiresAt?`${expired?"Ended":"Ends"} ${new Intl.DateTimeFormat("en",{dateStyle:"medium"}).format(subscription.expiresAt)}${!expired&&days!==null?` · ${days} days remaining`:""}`:"No end date"}</span>{!expired&&days!==null&&days<=7?<small>Email reminders due at 7, 3, 2 and 1 days. Delivery provider is not configured.</small>:null}</div>;
 }
 function SubscriptionEditor({user,packages,busy,close,assign,expire}:{user:AdminUsers[number];packages:AdminCatalog["packages"];busy:boolean;close:()=>void;assign:(values:Parameters<ReactMutation<typeof api.admin.assignSubscription>>[0])=>Promise<void>;expire:()=>Promise<void>}){
-  const [now]=useState(()=>Date.now()),date=(timestamp:number)=>new Date(timestamp-new Date(timestamp).getTimezoneOffset()*60000).toISOString().slice(0,10),current=user.subscription;
-  return <div className="dashboard-modal-backdrop"><section className="dashboard-modal card" role="dialog" aria-modal="true"><div className="modal-head"><div><span className="eyebrow">Subscription access</span><h2>{user.user.name||user.user.email}</h2></div><button className="icon-button" onClick={close}><X size={20}/></button></div><SubscriptionSummary subscription={current}/><form className="subscription-form" onSubmit={event=>{event.preventDefault();const f=new FormData(event.currentTarget),start=new Date(`${String(f.get("startsAt"))}T00:00:00`).getTime(),end=new Date(`${String(f.get("expiresAt"))}T23:59:59`).getTime();void assign({ownerId:user.user._id,packageId:String(f.get("packageId")) as AdminCatalog["packages"][number]["_id"],startsAt:start,expiresAt:end,adminNotes:String(f.get("notes")??"")||undefined})}}><label>Package<select name="packageId" required defaultValue={current?.packageId??packages[0]?._id}>{packages.map(plan=><option key={plan._id} value={plan._id}>{plan.name.en} · {plan.priceDisplay}</option>)}</select></label><div className="subscription-dates"><label>Access starts<input type="date" name="startsAt" required defaultValue={date(current?.startsAt??now)}/></label><label>Access ends<input type="date" name="expiresAt" required defaultValue={date(current?.expiresAt??now+30*86400000)}/></label></div><label>Internal note<textarea name="notes" defaultValue={current?.adminNotes??""} placeholder="Payment reference, custom terms or reason for extension"/></label><p className="muted-copy">When the end date passes, the customer keeps dashboard access and historical data, but public portals stop accepting feedback until a plan is assigned again.</p><div className="portal-actions modal-actions">{current?<button className="button secondary danger-button" type="button" disabled={busy} onClick={()=>void expire()}>End access now</button>:null}<button type="button" className="button secondary" onClick={close}>Cancel</button><button className="button" disabled={busy||!packages.length}>Save subscription</button></div></form></section></div>;
+  const [now]=useState(()=>Date.now()),date=(timestamp:number)=>new Date(timestamp-new Date(timestamp).getTimezoneOffset()*60000).toISOString().slice(0,10),current=user.subscription,[startDate,setStartDate]=useState(()=>date(now)),[endDate,setEndDate]=useState(()=>{const next=new Date(now);next.setMonth(next.getMonth()+1);return date(next.getTime())}),[duration,setDuration]=useState(1),[durationUnit,setDurationUnit]=useState<"days"|"months"|"years">("months");
+  function calculateEnd(){const next=new Date(`${startDate}T12:00:00`);if(durationUnit==="days")next.setDate(next.getDate()+duration);if(durationUnit==="months")next.setMonth(next.getMonth()+duration);if(durationUnit==="years")next.setFullYear(next.getFullYear()+duration);setEndDate(date(next.getTime()))}
+  return <div className="dashboard-modal-backdrop"><section className="dashboard-modal card" role="dialog" aria-modal="true"><div className="modal-head"><div><span className="eyebrow">Subscription access</span><h2>{user.user.name||user.user.email}</h2></div><button className="icon-button" onClick={close}><X size={20}/></button></div><SubscriptionSummary subscription={current}/><form className="subscription-form" onSubmit={event=>{event.preventDefault();const f=new FormData(event.currentTarget),start=new Date(`${String(f.get("startsAt"))}T00:00:00`).getTime(),end=new Date(`${String(f.get("expiresAt"))}T23:59:59`).getTime();void assign({ownerId:user.user._id,packageId:String(f.get("packageId")) as AdminCatalog["packages"][number]["_id"],startsAt:start,expiresAt:end,adminNotes:String(f.get("notes")??"")||undefined})}}><label>Package<select name="packageId" required defaultValue={current?.packageId??packages[0]?._id}>{packages.map(plan=><option key={plan._id} value={plan._id}>{plan.name.en} · {plan.priceDisplay}</option>)}</select></label><div className="duration-shortcut"><label>Duration<input type="number" min="1" value={duration} onChange={event=>setDuration(Math.max(1,Number(event.target.value)))}/></label><label>Unit<select value={durationUnit} onChange={event=>setDurationUnit(event.target.value as typeof durationUnit)}><option value="days">Days</option><option value="months">Months</option><option value="years">Years</option></select></label><button className="button secondary" type="button" onClick={calculateEnd}>Calculate end date</button></div><div className="subscription-dates"><label>Access starts<input type="date" name="startsAt" required value={startDate} onChange={event=>setStartDate(event.target.value)}/></label><label>Access ends<input type="date" name="expiresAt" required value={endDate} onChange={event=>setEndDate(event.target.value)}/></label></div><label>Internal note<textarea name="notes" defaultValue={current?.adminNotes??""} placeholder="Payment reference, custom terms or reason for extension"/></label><p className="muted-copy">Suspending blocks the entire account from signing in. Ending a subscription is different: the customer keeps dashboard and history access, but public portals stop accepting new feedback until reactivated.</p><div className="portal-actions modal-actions">{current?<button className="button secondary danger-button" type="button" disabled={busy} onClick={()=>void expire()}>End access now</button>:null}<button type="button" className="button secondary" onClick={close}>Cancel</button><button className="button" disabled={busy||!packages.length}>Save subscription</button></div></form></section></div>;
 }
 function AdminHeading({
   icon: Icon,

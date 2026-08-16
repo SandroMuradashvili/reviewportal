@@ -32,6 +32,8 @@ export const initializeCatalog=mutation({args:{},handler:async ctx=>{
     }
     await ctx.db.insert("auditLogs",{actorId:admin._id,action:"catalog.subscription-v2",targetType:"catalog",targetId:"packages",timestamp:Date.now()});
   }
+  const limited=(await ctx.db.query("auditLogs").collect()).some(log=>log.action==="catalog.subscription-v3");
+  if(!limited){for(const item of await ctx.db.query("packages").collect())if(item.slug==="growth")await ctx.db.patch(item._id,{description:{ka:"ერთი ანგარიში. მართეთ 5-მდე სხვადასხვა ბიზნესი.",en:"One account. Manage up to 5 different businesses.",ru:"Один аккаунт. Управляйте до 5 компаниями."},features:["Up to 5 businesses or locations","Complaint-resolution portals","Private low-rating feedback","Analytics dashboard","QR and NFC-ready links"],featuresLocalized:{ka:["5-მდე ბიზნესი ან ლოკაცია","საჩივრების მოგვარების პორტალები","დაბალი შეფასების პირადი უკუკავშირი","ანალიტიკის პანელი","QR და NFC ბმულები"],en:["Up to 5 businesses or locations","Complaint-resolution portals","Private low-rating feedback","Analytics dashboard","QR and NFC-ready links"],ru:["До 5 компаний или филиалов","Порталы для решения жалоб","Личная обратная связь при низкой оценке","Панель аналитики","Ссылки для QR и NFC"]},portalLimit:5});await ctx.db.insert("auditLogs",{actorId:admin._id,action:"catalog.subscription-v3",targetType:"catalog",targetId:"growth",timestamp:Date.now()})}
   if(inserted)await ctx.db.insert("auditLogs",{actorId:admin._id,action:"catalog.initialize",targetType:"catalog",targetId:"defaults",metadata:{inserted},timestamp:Date.now()});
   return {inserted};
 }});
