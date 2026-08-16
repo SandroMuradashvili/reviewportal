@@ -1,5 +1,171 @@
-import { mutation,query } from "./_generated/server";import { v } from "convex/values";import { requirePortalOwner } from "./lib/auth";
-export const byPortal=query({args:{portalId:v.id("portals")},handler:async(ctx,{portalId})=>{await requirePortalOwner(ctx,portalId);return ctx.db.query("feedback").withIndex("portal_date",q=>q.eq("portalId",portalId)).order("desc").take(100)}});
-const issueCategory=v.union(v.literal("quality"),v.literal("service"),v.literal("value"),v.literal("wait"),v.literal("cleanliness"),v.literal("atmosphere"),v.literal("accuracy"),v.literal("other"));
-export const submit=mutation({args:{slug:v.string(),visitTokenHash:v.string(),rating:v.number(),comment:v.optional(v.string()),issueCategories:v.array(issueCategory),dataAcknowledged:v.boolean()},handler:async(ctx,args)=>{if(!Number.isInteger(args.rating)||args.rating<1||args.rating>5)throw new Error("Rating must be 1–5");const comment=args.comment?.normalize("NFC").trim(),issueCategories=[...new Set(args.issueCategories)];if(args.rating<=3&&(issueCategories.length<1||issueCategories.length>2))throw new Error("Choose one or two issue categories");if(args.rating<=3&&!comment)throw new Error("A comment is required for ratings from 1 to 3");if(args.rating<=3&&!args.dataAcknowledged)throw new Error("Data-use acknowledgement is required");if(comment&&comment.length>1000)throw new Error("Comment too long");const portal=await ctx.db.query("portals").withIndex("slug",q=>q.eq("slug",args.slug)).unique();if(!portal||portal.status!=="live")throw new Error("Portal unavailable");const sub=await ctx.db.query("subscriptions").withIndex("owner",q=>q.eq("ownerId",portal.ownerId)).unique();if((sub?.status??"trial")==="trial"&&portal.submissionCount>=(sub?.trialLimit??10))throw new Error("Trial ended");const visit=await ctx.db.query("visits").withIndex("portal_token",q=>q.eq("portalId",portal._id).eq("tokenHash",args.visitTokenHash)).unique();if(visit?.submitted)throw new Error("Feedback already submitted");const now=Date.now();const visitId=visit?visit._id:await ctx.db.insert("visits",{portalId:portal._id,tokenHash:args.visitTokenHash,firstSeen:now,lastSeen:now,scanCount:1,submitted:false,redirected:false});await ctx.db.patch(visitId,{submitted:true,lastSeen:now});const id=await ctx.db.insert("feedback",{portalId:portal._id,visitId,rating:args.rating,comment:comment||undefined,issueCategories,dataAcknowledgedAt:args.dataAcknowledged?now:undefined,status:"unread",submittedAt:now});await ctx.db.insert("events",{portalId:portal._id,visitId,type:"feedback_submitted",rating:args.rating,timestamp:now});await ctx.db.patch(portal._id,{submissionCount:portal.submissionCount+1});return id}});
-export const setStatus=mutation({args:{feedbackId:v.id("feedback"),status:v.union(v.literal("unread"),v.literal("read"),v.literal("resolved"),v.literal("archived")),ownerNote:v.optional(v.string())},handler:async(ctx,args)=>{const row=await ctx.db.get(args.feedbackId);if(!row)throw new Error("Feedback not found");await requirePortalOwner(ctx,row.portalId);await ctx.db.patch(row._id,{status:args.status,ownerNote:args.ownerNote?.normalize("NFC").trim().slice(0,1000)||undefined})}});
+import { mutation, query } from "./_generated/server";
+import { v } from "convex/values";
+import { requirePortalOwner, requireUser } from "./lib/auth";
+export const byPortal = query({
+  args: { portalId: v.id("portals") },
+  handler: async (ctx, { portalId }) => {
+    await requirePortalOwner(ctx, portalId);
+    return ctx.db
+      .query("feedback")
+      .withIndex("portal_date", (q) => q.eq("portalId", portalId))
+      .order("desc")
+      .take(100);
+  },
+});
+const issueCategory = v.union(
+  v.literal("quality"),
+  v.literal("service"),
+  v.literal("value"),
+  v.literal("wait"),
+  v.literal("cleanliness"),
+  v.literal("atmosphere"),
+  v.literal("accuracy"),
+  v.literal("other"),
+);
+export const submit = mutation({
+  args: {
+    slug: v.string(),
+    visitTokenHash: v.string(),
+    rating: v.number(),
+    comment: v.optional(v.string()),
+    issueCategories: v.array(issueCategory),
+    dataAcknowledged: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    if (!Number.isInteger(args.rating) || args.rating < 1 || args.rating > 5)
+      throw new Error("Rating must be 1–5");
+    const comment = args.comment?.normalize("NFC").trim(),
+      issueCategories = [...new Set(args.issueCategories)];
+    if (
+      args.rating <= 3 &&
+      (issueCategories.length < 1 || issueCategories.length > 2)
+    )
+      throw new Error("Choose one or two issue categories");
+    if (args.rating <= 3 && !comment)
+      throw new Error("A comment is required for ratings from 1 to 3");
+    if (args.rating <= 3 && !args.dataAcknowledged)
+      throw new Error("Data-use acknowledgement is required");
+    if (comment && comment.length > 1000) throw new Error("Comment too long");
+    const portal = await ctx.db
+      .query("portals")
+      .withIndex("slug", (q) => q.eq("slug", args.slug))
+      .unique();
+    if (!portal || portal.status !== "live")
+      throw new Error("Portal unavailable");
+    const sub = await ctx.db
+      .query("subscriptions")
+      .withIndex("owner", (q) => q.eq("ownerId", portal.ownerId))
+      .unique();
+    if (
+      (sub?.status ?? "trial") === "trial" &&
+      portal.submissionCount >= (sub?.trialLimit ?? 10)
+    )
+      throw new Error("Trial ended");
+    const visit = await ctx.db
+      .query("visits")
+      .withIndex("portal_token", (q) =>
+        q.eq("portalId", portal._id).eq("tokenHash", args.visitTokenHash),
+      )
+      .unique();
+    if (visit?.submitted) throw new Error("Feedback already submitted");
+    const now = Date.now();
+    const visitId = visit
+      ? visit._id
+      : await ctx.db.insert("visits", {
+          portalId: portal._id,
+          tokenHash: args.visitTokenHash,
+          firstSeen: now,
+          lastSeen: now,
+          scanCount: 1,
+          submitted: false,
+          redirected: false,
+        });
+    await ctx.db.patch(visitId, { submitted: true, lastSeen: now });
+    const id = await ctx.db.insert("feedback", {
+      portalId: portal._id,
+      visitId,
+      rating: args.rating,
+      comment: comment || undefined,
+      issueCategories,
+      dataAcknowledgedAt: args.dataAcknowledged ? now : undefined,
+      status: "unread",
+      submittedAt: now,
+    });
+    await ctx.db.insert("events", {
+      portalId: portal._id,
+      visitId,
+      type: "feedback_submitted",
+      rating: args.rating,
+      timestamp: now,
+    });
+    await ctx.db.patch(portal._id, {
+      submissionCount: portal.submissionCount + 1,
+    });
+    return id;
+  },
+});
+export const setStatus = mutation({
+  args: {
+    feedbackId: v.id("feedback"),
+    status: v.union(
+      v.literal("unread"),
+      v.literal("read"),
+      v.literal("resolved"),
+      v.literal("archived"),
+    ),
+    ownerNote: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const row = await ctx.db.get(args.feedbackId);
+    if (!row) throw new Error("Feedback not found");
+    await requirePortalOwner(ctx, row.portalId);
+    await ctx.db.patch(row._id, {
+      status: args.status,
+      ownerNote:
+        args.ownerNote?.normalize("NFC").trim().slice(0, 1000) || undefined,
+    });
+  },
+});
+export const removeMany = mutation({
+  args: {
+    feedbackIds: v.optional(v.array(v.id("feedback"))),
+    olderThan: v.optional(v.number()),
+    all: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const ids = [...new Set(args.feedbackIds ?? [])];
+    if (!ids.length && !args.olderThan && !args.all)
+      throw new Error("Choose feedback to delete");
+    let removed = 0;
+    if (ids.length) {
+      for (const id of ids) {
+        const row = await ctx.db.get(id);
+        if (!row) continue;
+        await requirePortalOwner(ctx, row.portalId);
+        await ctx.db.delete(id);
+        removed++;
+      }
+    } else {
+      const user = await requireUser(ctx),
+        portals = await ctx.db
+          .query("portals")
+          .withIndex("owner", (q) => q.eq("ownerId", user._id))
+          .collect();
+      for (const portal of portals) {
+        const rows = await ctx.db
+          .query("feedback")
+          .withIndex("portal_date", (q) => q.eq("portalId", portal._id))
+          .collect();
+        for (const row of rows)
+          if (
+            args.all ||
+            (args.olderThan !== undefined && row.submittedAt < args.olderThan)
+          ) {
+            await ctx.db.delete(row._id);
+            removed++;
+          }
+      }
+    }
+    return removed;
+  },
+});

@@ -1,13 +1,157 @@
-import { defineSchema,defineTable } from "convex/server";import { authTables } from "@convex-dev/auth/server";import { v } from "convex/values";
-export default defineSchema({...authTables,
-  users:defineTable({name:v.optional(v.string()),email:v.optional(v.string()),image:v.optional(v.string()),emailVerificationTime:v.optional(v.number()),isAnonymous:v.optional(v.boolean()),locale:v.optional(v.union(v.literal("ka"),v.literal("en"),v.literal("ru"))),role:v.optional(v.union(v.literal("owner"),v.literal("admin"))),state:v.optional(v.union(v.literal("active"),v.literal("suspended")))}).index("email",["email"]),
-  subscriptions:defineTable({ownerId:v.id("users"),status:v.union(v.literal("trial"),v.literal("active"),v.literal("expired"),v.literal("suspended")),trialLimit:v.number(),packageName:v.optional(v.string()),startsAt:v.optional(v.number()),expiresAt:v.optional(v.number()),adminNotes:v.optional(v.string())}).index("owner",["ownerId"]),
-  portals:defineTable({ownerId:v.id("users"),name:v.string(),slug:v.string(),status:v.union(v.literal("draft"),v.literal("live"),v.literal("paused"),v.literal("archived")),prompt:v.object({ka:v.string(),en:v.string(),ru:v.string()}),destinationUrl:v.optional(v.string()),businessUrl:v.optional(v.string()),redirectThreshold:v.optional(v.number()),notificationEnabled:v.boolean(),submissionCount:v.number()}).index("owner",["ownerId"]).index("slug",["slug"]),
-  visits:defineTable({portalId:v.id("portals"),tokenHash:v.string(),firstSeen:v.number(),lastSeen:v.number(),scanCount:v.number(),submitted:v.boolean(),redirected:v.boolean(),source:v.optional(v.string())}).index("portal",["portalId"]).index("portal_token",["portalId","tokenHash"]),
-  feedback:defineTable({portalId:v.id("portals"),visitId:v.id("visits"),rating:v.number(),comment:v.optional(v.string()),issueCategories:v.optional(v.array(v.union(v.literal("quality"),v.literal("service"),v.literal("value"),v.literal("wait"),v.literal("cleanliness"),v.literal("atmosphere"),v.literal("accuracy"),v.literal("other")))),dataAcknowledgedAt:v.optional(v.number()),status:v.union(v.literal("unread"),v.literal("read"),v.literal("resolved"),v.literal("archived")),ownerNote:v.optional(v.string()),submittedAt:v.number()}).index("portal_date",["portalId","submittedAt"]).index("portal_status",["portalId","status"]),
-  events:defineTable({portalId:v.id("portals"),visitId:v.id("visits"),type:v.union(v.literal("page_view"),v.literal("star_selected"),v.literal("feedback_submitted"),v.literal("redirect_clicked")),rating:v.optional(v.number()),timestamp:v.number()}).index("portal_date",["portalId","timestamp"]),
-  products:defineTable({slug:v.optional(v.string()),kind:v.optional(v.union(v.literal("individual"),v.literal("set"))),name:v.object({ka:v.string(),en:v.string(),ru:v.string()}),description:v.object({ka:v.string(),en:v.string(),ru:v.string()}),priceDisplay:v.optional(v.string()),priceGel:v.optional(v.number()),compareAtPriceGel:v.optional(v.number()),stockQuantity:v.number(),available:v.boolean(),imageUrl:v.string(),sortOrder:v.number()}),
-  packages:defineTable({slug:v.optional(v.string()),name:v.object({ka:v.string(),en:v.string(),ru:v.string()}),description:v.optional(v.object({ka:v.string(),en:v.string(),ru:v.string()})),priceDisplay:v.string(),priceGel:v.optional(v.number()),compareAtPriceGel:v.optional(v.number()),durationDays:v.optional(v.number()),features:v.array(v.string()),featuresLocalized:v.optional(v.object({ka:v.array(v.string()),en:v.array(v.string()),ru:v.array(v.string())})),portalLimit:v.number(),visible:v.boolean(),sortOrder:v.optional(v.number())}),
-  auditLogs:defineTable({actorId:v.id("users"),action:v.string(),targetType:v.string(),targetId:v.string(),metadata:v.optional(v.any()),timestamp:v.number()}).index("actor",["actorId"]),
-  legalAcceptances:defineTable({userId:v.id("users"),documentType:v.string(),version:v.string(),locale:v.string(),acceptedAt:v.number()}).index("user",["userId"]),
+import { defineSchema, defineTable } from "convex/server";
+import { authTables } from "@convex-dev/auth/server";
+import { v } from "convex/values";
+export default defineSchema({
+  ...authTables,
+  users: defineTable({
+    name: v.optional(v.string()),
+    email: v.optional(v.string()),
+    image: v.optional(v.string()),
+    emailVerificationTime: v.optional(v.number()),
+    isAnonymous: v.optional(v.boolean()),
+    locale: v.optional(
+      v.union(v.literal("ka"), v.literal("en"), v.literal("ru")),
+    ),
+    role: v.optional(v.union(v.literal("owner"), v.literal("admin"))),
+    state: v.optional(v.union(v.literal("active"), v.literal("suspended"))),
+  }).index("email", ["email"]),
+  subscriptions: defineTable({
+    ownerId: v.id("users"),
+    status: v.union(
+      v.literal("trial"),
+      v.literal("active"),
+      v.literal("expired"),
+      v.literal("suspended"),
+    ),
+    trialLimit: v.number(),
+    packageName: v.optional(v.string()),
+    startsAt: v.optional(v.number()),
+    expiresAt: v.optional(v.number()),
+    adminNotes: v.optional(v.string()),
+  }).index("owner", ["ownerId"]),
+  portals: defineTable({
+    ownerId: v.id("users"),
+    name: v.string(),
+    slug: v.string(),
+    status: v.union(
+      v.literal("draft"),
+      v.literal("live"),
+      v.literal("paused"),
+      v.literal("archived"),
+    ),
+    prompt: v.object({ ka: v.string(), en: v.string(), ru: v.string() }),
+    destinationUrl: v.optional(v.string()),
+    businessUrl: v.optional(v.string()),
+    logoStorageId: v.optional(v.id("_storage")),
+    redirectThreshold: v.optional(v.number()),
+    notificationEnabled: v.boolean(),
+    submissionCount: v.number(),
+  })
+    .index("owner", ["ownerId"])
+    .index("slug", ["slug"]),
+  visits: defineTable({
+    portalId: v.id("portals"),
+    tokenHash: v.string(),
+    firstSeen: v.number(),
+    lastSeen: v.number(),
+    scanCount: v.number(),
+    submitted: v.boolean(),
+    redirected: v.boolean(),
+    source: v.optional(v.string()),
+  })
+    .index("portal", ["portalId"])
+    .index("portal_token", ["portalId", "tokenHash"]),
+  feedback: defineTable({
+    portalId: v.id("portals"),
+    visitId: v.id("visits"),
+    rating: v.number(),
+    comment: v.optional(v.string()),
+    issueCategories: v.optional(
+      v.array(
+        v.union(
+          v.literal("quality"),
+          v.literal("service"),
+          v.literal("value"),
+          v.literal("wait"),
+          v.literal("cleanliness"),
+          v.literal("atmosphere"),
+          v.literal("accuracy"),
+          v.literal("other"),
+        ),
+      ),
+    ),
+    dataAcknowledgedAt: v.optional(v.number()),
+    status: v.union(
+      v.literal("unread"),
+      v.literal("read"),
+      v.literal("resolved"),
+      v.literal("archived"),
+    ),
+    ownerNote: v.optional(v.string()),
+    submittedAt: v.number(),
+  })
+    .index("portal_date", ["portalId", "submittedAt"])
+    .index("portal_status", ["portalId", "status"]),
+  events: defineTable({
+    portalId: v.id("portals"),
+    visitId: v.id("visits"),
+    type: v.union(
+      v.literal("page_view"),
+      v.literal("star_selected"),
+      v.literal("feedback_submitted"),
+      v.literal("redirect_clicked"),
+    ),
+    rating: v.optional(v.number()),
+    timestamp: v.number(),
+  }).index("portal_date", ["portalId", "timestamp"]),
+  products: defineTable({
+    slug: v.optional(v.string()),
+    kind: v.optional(v.union(v.literal("individual"), v.literal("set"))),
+    name: v.object({ ka: v.string(), en: v.string(), ru: v.string() }),
+    description: v.object({ ka: v.string(), en: v.string(), ru: v.string() }),
+    priceDisplay: v.optional(v.string()),
+    priceGel: v.optional(v.number()),
+    compareAtPriceGel: v.optional(v.number()),
+    stockQuantity: v.number(),
+    available: v.boolean(),
+    imageUrl: v.string(),
+    sortOrder: v.number(),
+  }),
+  packages: defineTable({
+    slug: v.optional(v.string()),
+    name: v.object({ ka: v.string(), en: v.string(), ru: v.string() }),
+    description: v.optional(
+      v.object({ ka: v.string(), en: v.string(), ru: v.string() }),
+    ),
+    priceDisplay: v.string(),
+    priceGel: v.optional(v.number()),
+    compareAtPriceGel: v.optional(v.number()),
+    durationDays: v.optional(v.number()),
+    features: v.array(v.string()),
+    featuresLocalized: v.optional(
+      v.object({
+        ka: v.array(v.string()),
+        en: v.array(v.string()),
+        ru: v.array(v.string()),
+      }),
+    ),
+    portalLimit: v.number(),
+    visible: v.boolean(),
+    sortOrder: v.optional(v.number()),
+  }),
+  auditLogs: defineTable({
+    actorId: v.id("users"),
+    action: v.string(),
+    targetType: v.string(),
+    targetId: v.string(),
+    metadata: v.optional(v.any()),
+    timestamp: v.number(),
+  }).index("actor", ["actorId"]),
+  legalAcceptances: defineTable({
+    userId: v.id("users"),
+    documentType: v.string(),
+    version: v.string(),
+    locale: v.string(),
+    acceptedAt: v.number(),
+  }).index("user", ["userId"]),
 });

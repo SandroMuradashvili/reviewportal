@@ -1,98 +1,348 @@
 export type LegalSection = [string, string];
-export type LegalDoc = { title: string; intro: string; sections: LegalSection[] };
-export type MultilingualLegalContent = Record<string,{ka:LegalDoc;en:LegalDoc;ru:LegalDoc}>;
+export type LegalDoc = {
+  title: string;
+  intro: string;
+  sections: LegalSection[];
+};
+export type MultilingualLegalContent = Record<
+  string,
+  { ka: LegalDoc; en: LegalDoc; ru: LegalDoc }
+>;
 
-const contact="reviewportal55@gmail.com · +995 577 66 55 25";
+const contact = "reviewportal55@gmail.com · +995 577 66 55 25";
 
-export const legalContent:MultilingualLegalContent={
-  privacy:{
-    ka:{title:"კონფიდენციალურობის პოლიტიკა",intro:"ძალაშია 2026 წლის 16 აგვისტოდან. ეს პოლიტიკა აღწერს ReviewPortal-ის მიერ მონაცემთა დამუშავებას საქართველოს კანონმდებლობის შესაბამისად.",sections:[
-      ["ვინ ამუშავებს მონაცემებს",`ReviewPortal მართავს ანგარიშისა და უსაფრთხოების მონაცემებს. ბიზნესის გვერდზე დატოვებული პირადი უკუკავშირის მიზნებს შესაბამისი ბიზნესი განსაზღვრავს, ხოლო ReviewPortal ამ მონაცემს მისთვის ამუშავებს. მოთხოვნები: ${contact}.`],
-      ["რას ვაგროვებთ","ბიზნესის ანგარიშის სახელს, ელფოსტას, ავტორიზაციის მონაცემებს, ენის არჩევანს, პორტალის პარამეტრებსა და მხარდაჭერის მიმოწერას; მომხმარებლის 1–5 შეფასებას, არჩეულ საკითხის კატეგორიებს, კომენტარსა და მონაცემების გამოყენების შეტყობინების დადასტურების დროს; შემთხვევით შექმნილი მოწყობილობის ტოკენის ჰეშს, გვერდის ნახვის, შეფასებისა და გადამისამართების დროს. მომხმარებელს სახელს, ელფოსტას ან ტელეფონს არ ვთხოვთ, თუმცა კომენტარში თავად შეიძლება მიუთითოს პირადი ინფორმაცია."],
-      ["მიზნები და საფუძვლები","მონაცემებს ვიყენებთ მომსახურების გასაწევად, ბიზნესისთვის უკუკავშირის მისაწოდებლად, დუბლირებული პასუხებისა და ბოროტად გამოყენების შესამცირებლად, სტატისტიკის, მხარდაჭერის, უსაფრთხოებისა და სამართლებრივი ვალდებულებებისთვის. საფუძველი შეიძლება იყოს ხელშეკრულება, კანონიერი ინტერესი, სამართლებრივი ვალდებულება ან თანხმობა, როცა კანონი ამას მოითხოვს."],
-      ["ვის ვუზიარებთ","პირადი უკუკავშირი ხელმისაწვდომია შესაბამისი ბიზნესისთვის და ReviewPortal-ის უფლებამოსილი პირებისთვის, როცა ეს საჭიროა მხარდაჭერის, უსაფრთხოების ან კანონისთვის. ინფრასტრუქტურაში ვიყენებთ Vercel-ს, Convex-ს და, მომხმარებლის არჩევის შემთხვევაში, Google-სა და WhatsApp/Meta-ს. გარე ბმულის გახსნის შემდეგ მოქმედებს მესამე მხარის პოლიტიკა."],
-      ["საერთაშორისო გადაცემა და დაცვა","მომწოდებლებს მონაცემების დამუშავება საქართველოს ფარგლებს გარეთ შეუძლიათ. ვიყენებთ შესაბამის სახელშეკრულებო და ტექნიკურ ზომებს, წვდომის შეზღუდვასა და დაშიფრულ კავშირს. ინტერნეტში აბსოლუტური უსაფრთხოების გარანტირება შეუძლებელია."],
-      ["შენახვა","მონაცემებს ვინახავთ ანგარიშის ან პორტალის მოქმედების პერიოდში და შემდეგ მხოლოდ იმდენ ხანს, რამდენიც გონივრულად საჭიროა წაშლის მოთხოვნის, დავის, უსაფრთხოების, აღრიცხვის ან კანონისთვის. ანონიმიზებული აგრეგატები შეიძლება უფრო დიდხანს შევინახოთ."],
-      ["თქვენი უფლებები","კანონით გათვალისწინებულ ფარგლებში შეგიძლიათ მოითხოვოთ წვდომა, ასლი, გასწორება, წაშლა, დამუშავების შეწყვეტა ან შეზღუდვა, გადატანა და თანხმობის უკან გამოთხოვა. ასევე შეგიძლიათ მიმართოთ საქართველოს მონაცემთა დაცვის ზედამხედველ ორგანოს ან სასამართლოს."],
-      ["ლოკალური საცავი და ცვლილებები","სერვისი იყენებს ლოკალურ საცავს იურიდიული შეტყობინების დამახსოვრებისა და ვიზიტის დუბლირების შესამცირებლად. არსებითი ცვლილებისას განვაახლებთ თარიღს და, საჭიროების შემთხვევაში, მოგაწვდით შეტყობინებას."]
-    ]},
-    en:{title:"Privacy Policy",intro:"Effective 16 August 2026. This policy explains how ReviewPortal processes data under applicable Georgian law.",sections:[
-      ["Who handles data",`ReviewPortal controls account and security data. For private feedback submitted through a business portal, the relevant business determines the purpose and ReviewPortal processes that data for it. Privacy requests: ${contact}.`],
-      ["Data we collect","Business account name, email, authentication data, language, portal settings and support messages; a visitor’s 1–5 rating, selected issue categories, comment and timestamp confirming the data-use notice; a randomly generated device-token hash and timestamps for page views, rating selections and outbound clicks. We do not ask visitors for a name, email or phone, but they may include personal data in a comment."],
-      ["Purposes and legal bases","We process data to provide the service, deliver feedback to the relevant business, reduce duplicate or abusive submissions, produce analytics, support users, secure the service and meet legal duties. The basis may be contract, legitimate interests, legal obligation or consent where law requires it."],
-      ["Recipients and providers","Private feedback is available to the relevant business and authorised ReviewPortal personnel where needed for support, security or law. Providers include Vercel (hosting), Convex (data and authentication), and, when selected by a user, Google and WhatsApp/Meta. A third party’s policy applies after its link is opened."],
-      ["International transfers and security","Providers may process data outside Georgia. We use appropriate contractual and technical safeguards, access controls and encrypted transport. No internet service can promise absolute security."],
-      ["Retention","We retain data while an account or portal is active and afterward only as reasonably needed for deletion handling, disputes, security, accounting or law. We may keep anonymised aggregate statistics longer."],
-      ["Your rights","Subject to law, you may request access, a copy, correction, deletion, cessation or restriction, portability, or withdrawal of consent. You may also complain to Georgia’s data-protection supervisory authority or a court."],
-      ["Local storage and updates","We use local storage to remember the legal notice and reduce duplicate visit counting. We will update the effective date for material changes and provide notice where required."]
-    ]},
-    ru:{title:"Политика конфиденциальности",intro:"Действует с 16 августа 2026 года. Политика описывает обработку данных ReviewPortal по применимому законодательству Грузии.",sections:[
-      ["Кто обрабатывает данные",`ReviewPortal определяет обработку данных аккаунта и безопасности. Цели обработки личной обратной связи определяет соответствующая компания, а ReviewPortal обрабатывает её для компании. Запросы: ${contact}.`],
-      ["Какие данные собираются","Имя и email владельца, данные входа, язык, настройки портала и поддержка; оценка посетителя 1–5, выбранные категории проблемы, комментарий и время подтверждения уведомления об использовании данных; хеш случайного токена устройства и время просмотров, оценок и переходов. Имя, email и телефон у посетителя не запрашиваются, но он может сам указать личные данные в комментарии."],
-      ["Цели и основания","Данные нужны для оказания услуги, передачи обратной связи компании, борьбы с дублями и злоупотреблениями, аналитики, поддержки, безопасности и исполнения закона. Основанием могут быть договор, законный интерес, юридическая обязанность или согласие, когда оно требуется."],
-      ["Получатели","Личный отзыв доступен соответствующей компании и уполномоченным сотрудникам ReviewPortal при необходимости. Поставщики: Vercel, Convex и, по выбору пользователя, Google и WhatsApp/Meta. После открытия внешней ссылки действует политика третьей стороны."],
-      ["Передача и безопасность","Поставщики могут обрабатывать данные за пределами Грузии. Применяются договорные и технические меры, контроль доступа и шифрование при передаче. Абсолютная безопасность в интернете не гарантируется."],
-      ["Хранение","Данные хранятся во время работы аккаунта или портала, а затем только пока это обоснованно нужно для удаления, споров, безопасности, учёта или закона. Обезличенная статистика может храниться дольше."],
-      ["Ваши права","В предусмотренных законом случаях можно запросить доступ, копию, исправление, удаление, прекращение или ограничение обработки, переносимость и отзыв согласия, а также обратиться в надзорный орган Грузии или суд."],
-      ["Локальное хранилище и изменения","Локальное хранилище запоминает юридическое уведомление и помогает уменьшить дублирование визитов. При существенных изменениях обновляется дата и направляется уведомление, если это требуется."]
-    ]}
+export const legalContent: MultilingualLegalContent = {
+  privacy: {
+    ka: {
+      title: "კონფიდენციალურობის პოლიტიკა",
+      intro:
+        "ძალაშია 2026 წლის 16 აგვისტოდან. ეს პოლიტიკა აღწერს ReviewPortal-ის მიერ მონაცემთა დამუშავებას საქართველოს კანონმდებლობის შესაბამისად.",
+      sections: [
+        [
+          "ვინ ამუშავებს მონაცემებს",
+          `ReviewPortal მართავს ანგარიშისა და უსაფრთხოების მონაცემებს. ბიზნესის გვერდზე დატოვებული პირადი უკუკავშირის მიზნებს შესაბამისი ბიზნესი განსაზღვრავს, ხოლო ReviewPortal ამ მონაცემს მისთვის ამუშავებს. მოთხოვნები: ${contact}.`,
+        ],
+        [
+          "რას ვაგროვებთ",
+          "ბიზნესის ანგარიშის სახელს, ელფოსტას, ავტორიზაციის მონაცემებს, ენის არჩევანს, პორტალის პარამეტრებსა და მხარდაჭერის მიმოწერას; მომხმარებლის 1–5 შეფასებას, არჩეულ საკითხის კატეგორიებს, კომენტარსა და მონაცემების გამოყენების შეტყობინების დადასტურების დროს; შემთხვევით შექმნილი მოწყობილობის ტოკენის ჰეშს, გვერდის ნახვის, შეფასებისა და გადამისამართების დროს. მომხმარებელს სახელს, ელფოსტას ან ტელეფონს არ ვთხოვთ, თუმცა კომენტარში თავად შეიძლება მიუთითოს პირადი ინფორმაცია.",
+        ],
+        [
+          "მიზნები და საფუძვლები",
+          "მონაცემებს ვიყენებთ მომსახურების გასაწევად, ბიზნესისთვის უკუკავშირის მისაწოდებლად, დუბლირებული პასუხებისა და ბოროტად გამოყენების შესამცირებლად, სტატისტიკის, მხარდაჭერის, უსაფრთხოებისა და სამართლებრივი ვალდებულებებისთვის. საფუძველი შეიძლება იყოს ხელშეკრულება, კანონიერი ინტერესი, სამართლებრივი ვალდებულება ან თანხმობა, როცა კანონი ამას მოითხოვს.",
+        ],
+        [
+          "ვის ვუზიარებთ",
+          "პირადი უკუკავშირი ხელმისაწვდომია შესაბამისი ბიზნესისთვის და ReviewPortal-ის უფლებამოსილი პირებისთვის, როცა ეს საჭიროა მხარდაჭერის, უსაფრთხოების ან კანონისთვის. ინფრასტრუქტურაში ვიყენებთ Vercel-ს, Convex-ს და, მომხმარებლის არჩევის შემთხვევაში, Google-სა და WhatsApp/Meta-ს. გარე ბმულის გახსნის შემდეგ მოქმედებს მესამე მხარის პოლიტიკა.",
+        ],
+        [
+          "საერთაშორისო გადაცემა და დაცვა",
+          "მომწოდებლებს მონაცემების დამუშავება საქართველოს ფარგლებს გარეთ შეუძლიათ. ვიყენებთ შესაბამის სახელშეკრულებო და ტექნიკურ ზომებს, წვდომის შეზღუდვასა და დაშიფრულ კავშირს. ინტერნეტში აბსოლუტური უსაფრთხოების გარანტირება შეუძლებელია.",
+        ],
+        [
+          "შენახვა და თვითმომსახურებით წაშლა",
+          "პანელიდან შესაძლებელია ცალკეული უკუკავშირის, პორტალის ან მთელი ანგარიშის წაშლა. ანგარიშის დადასტურებული წაშლა აქტიური სისტემიდან შლის პროფილს, ავტორიზაციას, გამოწერას, პორტალებს, ლოგოებს, ვიზიტებს, უკუკავშირსა და ანალიტიკას. შეზღუდული მონაცემი შეიძლება დარჩეს მხოლოდ დაცულ სარეზერვო ციკლში მის გადაწერამდე ან იმდენად, რამდენადაც მოითხოვს კანონი, დავა, თაღლითობის პრევენცია ან აღრიცხვა; ასეთ შემთხვევაში ის იზოლირდება და სხვა მიზნით აღარ გამოიყენება. ანონიმური აგრეგატები შეიძლება უფრო დიდხანს შევინახოთ.",
+        ],
+        [
+          "თქვენი უფლებები",
+          "კანონით გათვალისწინებულ ფარგლებში შეგიძლიათ მოითხოვოთ წვდომა, ასლი, გასწორება, წაშლა, დამუშავების შეწყვეტა ან შეზღუდვა, გადატანა და თანხმობის უკან გამოთხოვა. ასევე შეგიძლიათ მიმართოთ საქართველოს მონაცემთა დაცვის ზედამხედველ ორგანოს ან სასამართლოს.",
+        ],
+        [
+          "ლოკალური საცავი და ცვლილებები",
+          "სერვისი იყენებს ლოკალურ საცავს იურიდიული შეტყობინების დამახსოვრებისა და ვიზიტის დუბლირების შესამცირებლად. არსებითი ცვლილებისას განვაახლებთ თარიღს და, საჭიროების შემთხვევაში, მოგაწვდით შეტყობინებას.",
+        ],
+      ],
+    },
+    en: {
+      title: "Privacy Policy",
+      intro:
+        "Effective 16 August 2026. This policy explains how ReviewPortal processes data under applicable Georgian law.",
+      sections: [
+        [
+          "Who handles data",
+          `ReviewPortal controls account and security data. For private feedback submitted through a business portal, the relevant business determines the purpose and ReviewPortal processes that data for it. Privacy requests: ${contact}.`,
+        ],
+        [
+          "Data we collect",
+          "Business account name, email, authentication data, language, portal settings and support messages; a visitor’s 1–5 rating, selected issue categories, comment and timestamp confirming the data-use notice; a randomly generated device-token hash and timestamps for page views, rating selections and outbound clicks. We do not ask visitors for a name, email or phone, but they may include personal data in a comment.",
+        ],
+        [
+          "Purposes and legal bases",
+          "We process data to provide the service, deliver feedback to the relevant business, reduce duplicate or abusive submissions, produce analytics, support users, secure the service and meet legal duties. The basis may be contract, legitimate interests, legal obligation or consent where law requires it.",
+        ],
+        [
+          "Recipients and providers",
+          "Private feedback is available to the relevant business and authorised ReviewPortal personnel where needed for support, security or law. Providers include Vercel (hosting), Convex (data and authentication), and, when selected by a user, Google and WhatsApp/Meta. A third party’s policy applies after its link is opened.",
+        ],
+        [
+          "International transfers and security",
+          "Providers may process data outside Georgia. We use appropriate contractual and technical safeguards, access controls and encrypted transport. No internet service can promise absolute security.",
+        ],
+        [
+          "Retention and self-service deletion",
+          "The dashboard can delete individual feedback, a portal, or the entire account. Confirmed account deletion removes the profile, authentication, subscription, portals, logos, visits, feedback, and analytics from the active system. Limited data may remain only in a protected backup cycle until overwritten, or to the extent required by law, a dispute, fraud prevention, or accounting; it is then isolated and not used for other purposes. Anonymous aggregates may be retained longer.",
+        ],
+        [
+          "Your rights",
+          "Subject to law, you may request access, a copy, correction, deletion, cessation or restriction, portability, or withdrawal of consent. You may also complain to Georgia’s data-protection supervisory authority or a court.",
+        ],
+        [
+          "Local storage and updates",
+          "We use local storage to remember the legal notice and reduce duplicate visit counting. We will update the effective date for material changes and provide notice where required.",
+        ],
+      ],
+    },
+    ru: {
+      title: "Политика конфиденциальности",
+      intro:
+        "Действует с 16 августа 2026 года. Политика описывает обработку данных ReviewPortal по применимому законодательству Грузии.",
+      sections: [
+        [
+          "Кто обрабатывает данные",
+          `ReviewPortal определяет обработку данных аккаунта и безопасности. Цели обработки личной обратной связи определяет соответствующая компания, а ReviewPortal обрабатывает её для компании. Запросы: ${contact}.`,
+        ],
+        [
+          "Какие данные собираются",
+          "Имя и email владельца, данные входа, язык, настройки портала и поддержка; оценка посетителя 1–5, выбранные категории проблемы, комментарий и время подтверждения уведомления об использовании данных; хеш случайного токена устройства и время просмотров, оценок и переходов. Имя, email и телефон у посетителя не запрашиваются, но он может сам указать личные данные в комментарии.",
+        ],
+        [
+          "Цели и основания",
+          "Данные нужны для оказания услуги, передачи обратной связи компании, борьбы с дублями и злоупотреблениями, аналитики, поддержки, безопасности и исполнения закона. Основанием могут быть договор, законный интерес, юридическая обязанность или согласие, когда оно требуется.",
+        ],
+        [
+          "Получатели",
+          "Личный отзыв доступен соответствующей компании и уполномоченным сотрудникам ReviewPortal при необходимости. Поставщики: Vercel, Convex и, по выбору пользователя, Google и WhatsApp/Meta. После открытия внешней ссылки действует политика третьей стороны.",
+        ],
+        [
+          "Передача и безопасность",
+          "Поставщики могут обрабатывать данные за пределами Грузии. Применяются договорные и технические меры, контроль доступа и шифрование при передаче. Абсолютная безопасность в интернете не гарантируется.",
+        ],
+        [
+          "Хранение и самостоятельное удаление",
+          "В панели можно удалить отдельный отзыв, портал или весь аккаунт. После подтверждения из активной системы удаляются профиль, аутентификация, подписка, порталы, логотипы, посещения, отзывы и аналитика. Ограниченные данные могут оставаться только в защищённом цикле резервных копий до перезаписи либо в объёме, требуемом законом, спором, предотвращением мошенничества или учётом; они изолируются и не используются иначе. Анонимные агрегаты могут храниться дольше.",
+        ],
+        [
+          "Ваши права",
+          "В предусмотренных законом случаях можно запросить доступ, копию, исправление, удаление, прекращение или ограничение обработки, переносимость и отзыв согласия, а также обратиться в надзорный орган Грузии или суд.",
+        ],
+        [
+          "Локальное хранилище и изменения",
+          "Локальное хранилище запоминает юридическое уведомление и помогает уменьшить дублирование визитов. При существенных изменениях обновляется дата и направляется уведомление, если это требуется.",
+        ],
+      ],
+    },
   },
-  terms:{
-    ka:{title:"მომსახურების პირობები",intro:"ძალაშია 2026 წლის 16 აგვისტოდან. ეს პირობები არ ქმნის ReviewPortal-სა და Google-ს შორის პარტნიორობას.",sections:[
-      ["მომსახურება და უფლებამოსილება",`ReviewPortal არის დამოუკიდებელი უკუკავშირის პროგრამა. ოპერატორთან კავშირი: ${contact}. ბიზნესის ანგარიშის შექმნით ადასტურებთ, რომ ხართ სრულწლოვანი, გაქვთ ბიზნესის წარმომადგენლობის უფლება და აწვდით ზუსტ ინფორმაციას.`],
-      ["Google-ის წესები","თქვენ ვალდებული ხართ დაიცვათ დანიშნულების პლატფორმის მოქმედი წესები. აკრძალულია უარყოფითი შეფასებების შეფერხება, მხოლოდ დადებითი შეფასებების შერჩევით მოთხოვნა, სტიმულირებული ან ყალბი შეფასებები და მომხმარებელზე ზეწოლა. ReviewPortal Google-ის სახელით არ მოქმედებს და ვერ აკონტროლებს მის გადაწყვეტილებებს."],
-      ["მომხმარებლის არჩევანი და პლატფორმის რისკი","4–5 ვარსკვლავის არჩევისას Google-ის შეფასების გვერდი პირდაპირ იხსნება; 1–3 ვარსკვლავისას მომხმარებელს ჯერ პირადი უკუკავშირის ფორმა ეძლევა და გაგზავნის შემდეგ ბიზნესის Google პროფილის ბმული. პირადი პასუხი Google-ზე ავტომატურად არ ქვეყნდება. Google-მა ეს განსხვავებული გზა შეიძლება შეაფასოს უარყოფითი შეფასების შეფერხებად; ReviewPortal არ იძლევა პლატფორმის მიერ ამ მოდელის მიღების ან სანქციის არარსებობის გარანტიას."],
-      ["ანგარიში და კონტენტი","თქვენ პასუხისმგებელი ხართ ანგარიშის დაცვაზე, მომხმარებელთა კანონიერ მოწვევაზე, მითითებულ ბმულზე და ატვირთული მასალის გამოყენების უფლებაზე. არ ჩაწეროთ ზედმეტი პირადი ან სპეციალური კატეგორიის მონაცემები."],
-      ["ხელმისაწვდომობა და აღსრულება","მომსახურება შეიძლება დროებით შეფერხდეს ტექნიკური მომსახურების, უსაფრთხოების ან მესამე მხარის გამო. შეგვიძლია პროპორციულად შევზღუდოთ უკანონო, შეურაცხმყოფელი ან პლატფორმის წესების დამრღვევი პორტალი და, როცა შესაძლებელია, მივცეთ მფლობელს განმარტებისა და გასაჩივრების საშუალება."],
-      ["შედეგების გარანტიის არარსებობა","არ ვიძლევით შეფასებების რაოდენობის, საშუალო ქულის, რეიტინგის, შემოსავლის ან Google-ში უწყვეტი ხელმისაწვდომობის გარანტიას. ვიზიტები, მოწყობილობები და გადამისამართებები ტექნიკური შეფასებებია და არა დადასტურებული საჯარო მიმოხილვები."],
-      ["პასუხისმგებლობა","კანონით დაშვებულ ფარგლებში მხარეები არ აგებენ პასუხს არაპირდაპირ ან გაუთვალისწინებელ ზიანზე. ReviewPortal-ის ჯამური სახელშეკრულებო პასუხისმგებლობა არ აღემატება მოთხოვნამდე ბოლო სამი თვის განმავლობაში შესაბამის მომსახურებაში გადახდილ თანხას. ეს არ ვრცელდება განზრახ ქმედებაზე, უხეშ გაუფრთხილებლობაზე, ჯანმრთელობის ზიანზე, მონაცემთა დაცვის დარღვევაზე ან სხვა პასუხისმგებლობაზე, რომლის გამორიცხვაც დაუშვებელია."],
-      ["მესამე მხარის მოთხოვნები","ბიზნესი პასუხისმგებელია საკუთარ კონტენტზე, მომხმარებელთა მოწვევასა და პლატფორმის წესების დარღვევაზე და კანონით დაშვებულ ფარგლებში აანაზღაურებს ReviewPortal-ის პირდაპირ ზიანსა და გონივრულ ხარჯს, რომელიც მის დარღვევას მოჰყვა. ეს ReviewPortal-ს საკუთარი დარღვევის პასუხისმგებლობისგან არ ათავისუფლებს."],
-      ["შეწყვეტა და სამართალი","ანგარიშის დახურვა შეგიძლიათ მხარდაჭერის არხით. შეწყვეტა არ აუქმებს უკვე წარმოშობილ ვალდებულებებს. გამოიყენება საქართველოს სამართალი და დავა განიხილება საქართველოს კომპეტენტურ სასამართლოში, იმ სავალდებულო უფლებების შენარჩუნებით, რომელთა შეზღუდვაც არ შეიძლება."]
-    ]},
-    en:{title:"Terms of Service",intro:"Effective 16 August 2026. These terms do not create any partnership between ReviewPortal and Google.",sections:[
-      ["Service and authority",`ReviewPortal is independent feedback software. Operator contact: ${contact}. By creating a business account, you confirm that you are an adult, authorised to represent the business, and provide accurate information.`],
-      ["Google and destination-platform rules","You must comply with the destination platform’s current rules. You must not discourage negative reviews, selectively ask only for positive reviews, offer incentives for reviews, create fake reviews, or pressure customers. ReviewPortal does not act for Google and cannot control Google’s enforcement decisions."],
-      ["Customer choice and platform risk","Selecting 4–5 stars opens the configured Google review page immediately. Selecting 1–3 stars first presents a private-feedback form and then the configured Google business profile after submission. Private feedback is never posted to Google automatically. Google may regard this different path as discouraging or delaying negative reviews; ReviewPortal does not warrant that Google will approve the model or refrain from enforcement."],
-      ["Account and content","You are responsible for account security, lawful customer outreach, configured destinations, and rights to all branding and text you upload. Do not solicit unnecessary personal or special-category data through a portal."],
-      ["Availability and enforcement","The service may be interrupted for maintenance, security or third-party failures. We may proportionately restrict an unlawful, abusive or platform-violating portal and, where practical, provide notice and an opportunity to explain or appeal."],
-      ["No outcome guarantee","We do not guarantee review volume, average score, ranking, revenue, or uninterrupted availability on Google. Visits, device counts and outbound clicks are technical estimates, not verified public reviews."],
-      ["Liability","To the extent permitted by law, neither party is liable for indirect or unforeseeable loss. ReviewPortal’s aggregate contractual liability is capped at fees paid for the affected service in the three months before the claim. The cap does not apply to fraud, wilful misconduct, gross negligence, injury, data-protection liability, or anything else that law does not permit us to exclude."],
-      ["Third-party claims","The business is responsible for its content, customer outreach and platform-policy breaches and, to the extent lawful, will reimburse ReviewPortal for direct loss and reasonable costs caused by its breach. This does not excuse ReviewPortal from its own breach or negligence."],
-      ["Termination and law","You may request account closure through support. Termination does not erase accrued obligations. Georgian law governs and competent Georgian courts have jurisdiction, without limiting any mandatory right that cannot lawfully be waived."]
-    ]},
-    ru:{title:"Условия использования",intro:"Действуют с 16 августа 2026 года. Эти условия не создают партнёрства между ReviewPortal и Google.",sections:[
-      ["Сервис и полномочия",`ReviewPortal — независимый сервис обратной связи. Контакт оператора: ${contact}. Создавая бизнес-аккаунт, вы подтверждаете совершеннолетие, право представлять компанию и точность данных.`],
-      ["Правила Google","Вы обязаны соблюдать актуальные правила целевой платформы. Запрещено препятствовать негативным отзывам, избирательно просить только положительные, стимулировать или создавать фиктивные отзывы и давить на клиентов. ReviewPortal не действует от имени Google и не контролирует его решения."],
-      ["Выбор клиента и риск платформы","При выборе 4–5 звёзд сразу открывается настроенная страница отзывов Google. При 1–3 звёздах сначала показывается форма личного отзыва, а после отправки — настроенный профиль компании в Google. Личный отзыв автоматически в Google не публикуется. Google может расценить различие как препятствие негативным отзывам; ReviewPortal не гарантирует одобрение модели или отсутствие санкций."],
-      ["Аккаунт и контент","Вы отвечаете за безопасность аккаунта, законность обращения к клиентам, внешние ссылки и права на загруженные материалы. Не запрашивайте лишние персональные данные или данные специальных категорий."],
-      ["Доступность и ограничения","Работа может прерываться из-за обслуживания, безопасности или третьих сторон. Мы вправе соразмерно ограничить незаконный или нарушающий правила платформы портал и, когда возможно, дать уведомление и возможность обжалования."],
-      ["Без гарантии результата","Мы не гарантируем число или среднюю оценку отзывов, рейтинг, доход или постоянную доступность в Google. Визиты, устройства и переходы — технические показатели, а не подтверждённые публичные отзывы."],
-      ["Ответственность","В разрешённых законом пределах стороны не отвечают за косвенный или непредвидимый ущерб. Совокупная договорная ответственность ReviewPortal ограничена платой за затронутую услугу за три месяца до требования. Ограничение не применяется к умыслу, грубой неосторожности, вреду здоровью, защите данных и иным случаям, которые закон запрещает исключать."],
-      ["Требования третьих лиц","Компания отвечает за свой контент, обращение к клиентам и нарушения правил платформ и в законных пределах возмещает прямой ущерб и разумные расходы ReviewPortal, вызванные её нарушением. Это не освобождает ReviewPortal от собственной ответственности."],
-      ["Прекращение и право","Закрытие аккаунта запрашивается через поддержку. Оно не отменяет возникшие обязательства. Применяется право Грузии, спор рассматривает компетентный суд Грузии с сохранением обязательных прав."]
-    ]}
+  terms: {
+    ka: {
+      title: "მომსახურების პირობები",
+      intro:
+        "ძალაშია 2026 წლის 16 აგვისტოდან. ეს პირობები არ ქმნის ReviewPortal-სა და Google-ს შორის პარტნიორობას.",
+      sections: [
+        [
+          "მომსახურება და უფლებამოსილება",
+          `ReviewPortal არის დამოუკიდებელი უკუკავშირის პროგრამა. ოპერატორთან კავშირი: ${contact}. ბიზნესის ანგარიშის შექმნით ადასტურებთ, რომ ხართ სრულწლოვანი, გაქვთ ბიზნესის წარმომადგენლობის უფლება და აწვდით ზუსტ ინფორმაციას.`,
+        ],
+        [
+          "Google-ის წესები",
+          "თქვენ ვალდებული ხართ დაიცვათ დანიშნულების პლატფორმის მოქმედი წესები. აკრძალულია უარყოფითი შეფასებების შეფერხება, მხოლოდ დადებითი შეფასებების შერჩევით მოთხოვნა, სტიმულირებული ან ყალბი შეფასებები და მომხმარებელზე ზეწოლა. ReviewPortal Google-ის სახელით არ მოქმედებს და ვერ აკონტროლებს მის გადაწყვეტილებებს.",
+        ],
+        [
+          "მომხმარებლის არჩევანი და პლატფორმის რისკი",
+          "4–5 ვარსკვლავის არჩევისას Google-ის შეფასების გვერდი პირდაპირ იხსნება; 1–3 ვარსკვლავისას მომხმარებელს ჯერ პირადი უკუკავშირის ფორმა ეძლევა და გაგზავნის შემდეგ ბიზნესის Google პროფილის ბმული. პირადი პასუხი Google-ზე ავტომატურად არ ქვეყნდება. Google-მა ეს განსხვავებული გზა შეიძლება შეაფასოს უარყოფითი შეფასების შეფერხებად; ReviewPortal არ იძლევა პლატფორმის მიერ ამ მოდელის მიღების ან სანქციის არარსებობის გარანტიას.",
+        ],
+        [
+          "ანგარიში და კონტენტი",
+          "თქვენ პასუხისმგებელი ხართ ანგარიშის დაცვაზე, მომხმარებელთა კანონიერ მოწვევაზე, მითითებულ ბმულზე და ატვირთული მასალის გამოყენების უფლებაზე. არ ჩაწეროთ ზედმეტი პირადი ან სპეციალური კატეგორიის მონაცემები.",
+        ],
+        [
+          "ხელმისაწვდომობა და აღსრულება",
+          "მომსახურება შეიძლება დროებით შეფერხდეს ტექნიკური მომსახურების, უსაფრთხოების ან მესამე მხარის გამო. შეგვიძლია პროპორციულად შევზღუდოთ უკანონო, შეურაცხმყოფელი ან პლატფორმის წესების დამრღვევი პორტალი და, როცა შესაძლებელია, მივცეთ მფლობელს განმარტებისა და გასაჩივრების საშუალება.",
+        ],
+        [
+          "შედეგების გარანტიის არარსებობა",
+          "არ ვიძლევით შეფასებების რაოდენობის, საშუალო ქულის, რეიტინგის, შემოსავლის ან Google-ში უწყვეტი ხელმისაწვდომობის გარანტიას. ვიზიტები, მოწყობილობები და გადამისამართებები ტექნიკური შეფასებებია და არა დადასტურებული საჯარო მიმოხილვები.",
+        ],
+        [
+          "პასუხისმგებლობა",
+          "კანონით დაშვებულ ფარგლებში მხარეები არ აგებენ პასუხს არაპირდაპირ ან გაუთვალისწინებელ ზიანზე. ReviewPortal-ის ჯამური სახელშეკრულებო პასუხისმგებლობა არ აღემატება მოთხოვნამდე ბოლო სამი თვის განმავლობაში შესაბამის მომსახურებაში გადახდილ თანხას. ეს არ ვრცელდება განზრახ ქმედებაზე, უხეშ გაუფრთხილებლობაზე, ჯანმრთელობის ზიანზე, მონაცემთა დაცვის დარღვევაზე ან სხვა პასუხისმგებლობაზე, რომლის გამორიცხვაც დაუშვებელია.",
+        ],
+        [
+          "მესამე მხარის მოთხოვნები",
+          "ბიზნესი პასუხისმგებელია საკუთარ კონტენტზე, მომხმარებელთა მოწვევასა და პლატფორმის წესების დარღვევაზე და კანონით დაშვებულ ფარგლებში აანაზღაურებს ReviewPortal-ის პირდაპირ ზიანსა და გონივრულ ხარჯს, რომელიც მის დარღვევას მოჰყვა. ეს ReviewPortal-ს საკუთარი დარღვევის პასუხისმგებლობისგან არ ათავისუფლებს.",
+        ],
+        [
+          "შეწყვეტა, წაშლა და სამართალი",
+          "ანგარიშის სამუდამოდ წაშლა შეგიძლიათ პანელის პარამეტრებიდან მკაფიო ტექსტური დადასტურებით, ან მოთხოვნა გამოგვიგზავნოთ მხარდაჭერაში. წაშლამდე თავად უნდა გაიტანოთ საჭირო უკუკავშირი. წაშლა აუქმებს პორტალებზე წვდომას, მაგრამ არა უკვე წარმოშობილ კანონიერ ვალდებულებებს. გამოიყენება საქართველოს სამართალი და საქართველოს კომპეტენტური სასამართლო, სავალდებულო უფლებების შენარჩუნებით.",
+        ],
+      ],
+    },
+    en: {
+      title: "Terms of Service",
+      intro:
+        "Effective 16 August 2026. These terms do not create any partnership between ReviewPortal and Google.",
+      sections: [
+        [
+          "Service and authority",
+          `ReviewPortal is independent feedback software. Operator contact: ${contact}. By creating a business account, you confirm that you are an adult, authorised to represent the business, and provide accurate information.`,
+        ],
+        [
+          "Google and destination-platform rules",
+          "You must comply with the destination platform’s current rules. You must not discourage negative reviews, selectively ask only for positive reviews, offer incentives for reviews, create fake reviews, or pressure customers. ReviewPortal does not act for Google and cannot control Google’s enforcement decisions.",
+        ],
+        [
+          "Customer choice and platform risk",
+          "Selecting 4–5 stars opens the configured Google review page immediately. Selecting 1–3 stars first presents a private-feedback form and then the configured Google business profile after submission. Private feedback is never posted to Google automatically. Google may regard this different path as discouraging or delaying negative reviews; ReviewPortal does not warrant that Google will approve the model or refrain from enforcement.",
+        ],
+        [
+          "Account and content",
+          "You are responsible for account security, lawful customer outreach, configured destinations, and rights to all branding and text you upload. Do not solicit unnecessary personal or special-category data through a portal.",
+        ],
+        [
+          "Availability and enforcement",
+          "The service may be interrupted for maintenance, security or third-party failures. We may proportionately restrict an unlawful, abusive or platform-violating portal and, where practical, provide notice and an opportunity to explain or appeal.",
+        ],
+        [
+          "No outcome guarantee",
+          "We do not guarantee review volume, average score, ranking, revenue, or uninterrupted availability on Google. Visits, device counts and outbound clicks are technical estimates, not verified public reviews.",
+        ],
+        [
+          "Liability",
+          "To the extent permitted by law, neither party is liable for indirect or unforeseeable loss. ReviewPortal’s aggregate contractual liability is capped at fees paid for the affected service in the three months before the claim. The cap does not apply to fraud, wilful misconduct, gross negligence, injury, data-protection liability, or anything else that law does not permit us to exclude.",
+        ],
+        [
+          "Third-party claims",
+          "The business is responsible for its content, customer outreach and platform-policy breaches and, to the extent lawful, will reimburse ReviewPortal for direct loss and reasonable costs caused by its breach. This does not excuse ReviewPortal from its own breach or negligence.",
+        ],
+        [
+          "Termination, deletion and law",
+          "You can permanently delete the account in dashboard Settings using an explicit typed confirmation, or send a request through Support. Export needed feedback before deletion. Deletion ends portal access but does not erase accrued lawful obligations. Georgian law governs and competent Georgian courts have jurisdiction, without limiting mandatory rights.",
+        ],
+      ],
+    },
+    ru: {
+      title: "Условия использования",
+      intro:
+        "Действуют с 16 августа 2026 года. Эти условия не создают партнёрства между ReviewPortal и Google.",
+      sections: [
+        [
+          "Сервис и полномочия",
+          `ReviewPortal — независимый сервис обратной связи. Контакт оператора: ${contact}. Создавая бизнес-аккаунт, вы подтверждаете совершеннолетие, право представлять компанию и точность данных.`,
+        ],
+        [
+          "Правила Google",
+          "Вы обязаны соблюдать актуальные правила целевой платформы. Запрещено препятствовать негативным отзывам, избирательно просить только положительные, стимулировать или создавать фиктивные отзывы и давить на клиентов. ReviewPortal не действует от имени Google и не контролирует его решения.",
+        ],
+        [
+          "Выбор клиента и риск платформы",
+          "При выборе 4–5 звёзд сразу открывается настроенная страница отзывов Google. При 1–3 звёздах сначала показывается форма личного отзыва, а после отправки — настроенный профиль компании в Google. Личный отзыв автоматически в Google не публикуется. Google может расценить различие как препятствие негативным отзывам; ReviewPortal не гарантирует одобрение модели или отсутствие санкций.",
+        ],
+        [
+          "Аккаунт и контент",
+          "Вы отвечаете за безопасность аккаунта, законность обращения к клиентам, внешние ссылки и права на загруженные материалы. Не запрашивайте лишние персональные данные или данные специальных категорий.",
+        ],
+        [
+          "Доступность и ограничения",
+          "Работа может прерываться из-за обслуживания, безопасности или третьих сторон. Мы вправе соразмерно ограничить незаконный или нарушающий правила платформы портал и, когда возможно, дать уведомление и возможность обжалования.",
+        ],
+        [
+          "Без гарантии результата",
+          "Мы не гарантируем число или среднюю оценку отзывов, рейтинг, доход или постоянную доступность в Google. Визиты, устройства и переходы — технические показатели, а не подтверждённые публичные отзывы.",
+        ],
+        [
+          "Ответственность",
+          "В разрешённых законом пределах стороны не отвечают за косвенный или непредвидимый ущерб. Совокупная договорная ответственность ReviewPortal ограничена платой за затронутую услугу за три месяца до требования. Ограничение не применяется к умыслу, грубой неосторожности, вреду здоровью, защите данных и иным случаям, которые закон запрещает исключать.",
+        ],
+        [
+          "Требования третьих лиц",
+          "Компания отвечает за свой контент, обращение к клиентам и нарушения правил платформ и в законных пределах возмещает прямой ущерб и разумные расходы ReviewPortal, вызванные её нарушением. Это не освобождает ReviewPortal от собственной ответственности.",
+        ],
+        [
+          "Прекращение, удаление и право",
+          "Аккаунт можно навсегда удалить в настройках панели после точного текстового подтверждения либо направить запрос в Поддержку. До удаления экспортируйте нужные отзывы. Удаление прекращает доступ к порталам, но не отменяет возникшие законные обязательства. Применяется право Грузии и компетентный суд Грузии с сохранением обязательных прав.",
+        ],
+      ],
+    },
   },
-  "acceptable-use":{
-    ka:{title:"მისაღები გამოყენების წესები",intro:"ძალაშია 2026 წლის 16 აგვისტოდან. ეს წესები იცავს მომხმარებლებს, ბიზნესებსა და საჯარო შეფასებების სანდოობას.",sections:[
-      ["შეფასებების მანიპულაცია","აკრძალულია უარყოფითი შეფასების შეფერხება ან აკრძალვა; დადებითი შეფასებების შერჩევით მოთხოვნა; შეფასების სანაცვლოდ გადახდა, ფასდაკლება, საჩუქარი ან სხვა სარგებელი; ყალბი, კოორდინირებული ან თანამშრომლის/კონკურენტის შეფასება; შეფასების შეცვლის ან წაშლისთვის ზეწოლა."],
-      ["მომხმარებლის თავისუფლება","არ დამალოთ, არ გააუქმოთ და არ გახადოთ შეცდომაში შემყვანი Google-ის ბმული დაბალი შეფასების შემდეგ. მომხმარებელი თავისუფლად წყვეტს დატოვოს თუ არა საჯარო შეფასება. გაითვალისწინეთ, რომ ქულის მიხედვით განსხვავებული გზა მაინც შეიცავს Google-ის აღსრულების რისკს."],
-      ["უსაფრთხოება და კონტენტი","აკრძალულია სპამი, მუქარა, სიძულვილი, შევიწროება, უკანონო კონტენტი, ფიშინგი, მავნე კოდი, სახიფათო გადამისამართება, იმიტაცია, სხვისი უფლებების დარღვევა და უნებართვო პირადი მონაცემების შეგროვება."],
-      ["სისტემის ბოროტად გამოყენება","აკრძალულია ავტომატური შეტევები, სკრეპინგი, მეტრიკების ხელოვნურად გაზრდა, საცდელი ლიმიტის გვერდის ავლა, წვდომის კონტროლის დარღვევა და მომსახურების ხელის შეშლა."],
-      ["აღსრულება",`დარღვევის შესახებ მოგვწერეთ ${contact}-ზე. შეგვიძლია გამოვიძიოთ, შევინარჩუნოთ საჭირო მტკიცებულება, შევზღუდოთ პორტალი ან ანგარიში და განმეორებითი ან მძიმე დარღვევისას შევწყვიტოთ მომსახურება. კანონითა და უსაფრთხოებით დაშვებულ ფარგლებში მივაწვდით მიზეზს და გასაჩივრების გზას.`]
-    ]},
-    en:{title:"Acceptable Use Policy",intro:"Effective 16 August 2026. These rules protect customers, businesses and the integrity of public reviews.",sections:[
-      ["Review manipulation","Do not discourage or prohibit negative reviews; selectively request positive reviews; exchange payment, discounts, gifts or benefits for a review; create fake, coordinated, employee or competitor reviews; or pressure anyone to revise or remove a review."],
-      ["Customer freedom","Do not hide, disable or deceptively present the Google link after a lower rating. The customer remains free to publish a public review. A score-dependent journey still carries Google-enforcement risk even when the link remains available."],
-      ["Safety and content","No spam, threats, hate, harassment, illegal content, phishing, malware, unsafe redirects, impersonation, infringement, or collection of personal data without authority."],
-      ["System abuse","No automated attacks, scraping, metric manipulation, trial circumvention, access-control bypass, or interference with the service."],
-      ["Enforcement",`Report violations to ${contact}. We may investigate, preserve necessary evidence, restrict a portal or account, and terminate repeated or serious violations. Where law and safety allow, we will provide the reason and a way to appeal.`]
-    ]},
-    ru:{title:"Правила допустимого использования",intro:"Действуют с 16 августа 2026 года. Правила защищают клиентов, компании и достоверность публичных отзывов.",sections:[
-      ["Манипулирование отзывами","Запрещено препятствовать негативным отзывам; избирательно просить положительные; давать оплату, скидку, подарок или выгоду за отзыв; создавать фиктивные, скоординированные отзывы, отзывы сотрудников или о конкурентах; давить с целью изменения или удаления отзыва."],
-      ["Свобода клиента","Не скрывайте, не отключайте и не показывайте обманчиво ссылку Google после низкой оценки. Клиент свободно решает, публиковать ли публичный отзыв. Маршрут, зависящий от оценки, всё равно несёт риск санкций Google."],
-      ["Безопасность и контент","Запрещены спам, угрозы, ненависть, травля, незаконный контент, фишинг, вредоносный код, опасные ссылки, выдача себя за других, нарушение чужих прав и сбор персональных данных без полномочий."],
-      ["Злоупотребление системой","Запрещены автоматические атаки, скрейпинг, накрутка метрик, обход пробных лимитов и контроля доступа, вмешательство в работу сервиса."],
-      ["Применение",`О нарушениях сообщайте: ${contact}. Мы можем провести проверку, сохранить необходимые доказательства, ограничить портал или аккаунт и прекратить сервис при тяжёлом или повторном нарушении. Если закон и безопасность позволяют, сообщим причину и способ обжалования.`]
-    ]}
-  }
+  "acceptable-use": {
+    ka: {
+      title: "მისაღები გამოყენების წესები",
+      intro:
+        "ძალაშია 2026 წლის 16 აგვისტოდან. ეს წესები იცავს მომხმარებლებს, ბიზნესებსა და საჯარო შეფასებების სანდოობას.",
+      sections: [
+        [
+          "შეფასებების მანიპულაცია",
+          "აკრძალულია უარყოფითი შეფასების შეფერხება ან აკრძალვა; დადებითი შეფასებების შერჩევით მოთხოვნა; შეფასების სანაცვლოდ გადახდა, ფასდაკლება, საჩუქარი ან სხვა სარგებელი; ყალბი, კოორდინირებული ან თანამშრომლის/კონკურენტის შეფასება; შეფასების შეცვლის ან წაშლისთვის ზეწოლა.",
+        ],
+        [
+          "მომხმარებლის თავისუფლება",
+          "არ დამალოთ, არ გააუქმოთ და არ გახადოთ შეცდომაში შემყვანი Google-ის ბმული დაბალი შეფასების შემდეგ. მომხმარებელი თავისუფლად წყვეტს დატოვოს თუ არა საჯარო შეფასება. გაითვალისწინეთ, რომ ქულის მიხედვით განსხვავებული გზა მაინც შეიცავს Google-ის აღსრულების რისკს.",
+        ],
+        [
+          "უსაფრთხოება და კონტენტი",
+          "აკრძალულია სპამი, მუქარა, სიძულვილი, შევიწროება, უკანონო კონტენტი, ფიშინგი, მავნე კოდი, სახიფათო გადამისამართება, იმიტაცია, სხვისი უფლებების დარღვევა და უნებართვო პირადი მონაცემების შეგროვება.",
+        ],
+        [
+          "სისტემის ბოროტად გამოყენება",
+          "აკრძალულია ავტომატური შეტევები, სკრეპინგი, მეტრიკების ხელოვნურად გაზრდა, საცდელი ლიმიტის გვერდის ავლა, წვდომის კონტროლის დარღვევა და მომსახურების ხელის შეშლა.",
+        ],
+        [
+          "აღსრულება",
+          `დარღვევის შესახებ მოგვწერეთ ${contact}-ზე. შეგვიძლია გამოვიძიოთ, შევინარჩუნოთ საჭირო მტკიცებულება, შევზღუდოთ პორტალი ან ანგარიში და განმეორებითი ან მძიმე დარღვევისას შევწყვიტოთ მომსახურება. კანონითა და უსაფრთხოებით დაშვებულ ფარგლებში მივაწვდით მიზეზს და გასაჩივრების გზას.`,
+        ],
+      ],
+    },
+    en: {
+      title: "Acceptable Use Policy",
+      intro:
+        "Effective 16 August 2026. These rules protect customers, businesses and the integrity of public reviews.",
+      sections: [
+        [
+          "Review manipulation",
+          "Do not discourage or prohibit negative reviews; selectively request positive reviews; exchange payment, discounts, gifts or benefits for a review; create fake, coordinated, employee or competitor reviews; or pressure anyone to revise or remove a review.",
+        ],
+        [
+          "Customer freedom",
+          "Do not hide, disable or deceptively present the Google link after a lower rating. The customer remains free to publish a public review. A score-dependent journey still carries Google-enforcement risk even when the link remains available.",
+        ],
+        [
+          "Safety and content",
+          "No spam, threats, hate, harassment, illegal content, phishing, malware, unsafe redirects, impersonation, infringement, or collection of personal data without authority.",
+        ],
+        [
+          "System abuse",
+          "No automated attacks, scraping, metric manipulation, trial circumvention, access-control bypass, or interference with the service.",
+        ],
+        [
+          "Enforcement",
+          `Report violations to ${contact}. We may investigate, preserve necessary evidence, restrict a portal or account, and terminate repeated or serious violations. Where law and safety allow, we will provide the reason and a way to appeal.`,
+        ],
+      ],
+    },
+    ru: {
+      title: "Правила допустимого использования",
+      intro:
+        "Действуют с 16 августа 2026 года. Правила защищают клиентов, компании и достоверность публичных отзывов.",
+      sections: [
+        [
+          "Манипулирование отзывами",
+          "Запрещено препятствовать негативным отзывам; избирательно просить положительные; давать оплату, скидку, подарок или выгоду за отзыв; создавать фиктивные, скоординированные отзывы, отзывы сотрудников или о конкурентах; давить с целью изменения или удаления отзыва.",
+        ],
+        [
+          "Свобода клиента",
+          "Не скрывайте, не отключайте и не показывайте обманчиво ссылку Google после низкой оценки. Клиент свободно решает, публиковать ли публичный отзыв. Маршрут, зависящий от оценки, всё равно несёт риск санкций Google.",
+        ],
+        [
+          "Безопасность и контент",
+          "Запрещены спам, угрозы, ненависть, травля, незаконный контент, фишинг, вредоносный код, опасные ссылки, выдача себя за других, нарушение чужих прав и сбор персональных данных без полномочий.",
+        ],
+        [
+          "Злоупотребление системой",
+          "Запрещены автоматические атаки, скрейпинг, накрутка метрик, обход пробных лимитов и контроля доступа, вмешательство в работу сервиса.",
+        ],
+        [
+          "Применение",
+          `О нарушениях сообщайте: ${contact}. Мы можем провести проверку, сохранить необходимые доказательства, ограничить портал или аккаунт и прекратить сервис при тяжёлом или повторном нарушении. Если закон и безопасность позволяют, сообщим причину и способ обжалования.`,
+        ],
+      ],
+    },
+  },
 };
