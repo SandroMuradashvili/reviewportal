@@ -1822,6 +1822,7 @@ h2 {
 }
 .chart-scroll {
   overflow-x: auto;
+  position:relative;
 }
 .daily-chart svg {
   width: 100%;
@@ -1848,10 +1849,18 @@ h2 {
   stroke-width: 3;
   cursor: help;
 }
-.chart-point:hover circle {
+.chart-point:hover circle,.chart-point.active circle {
   fill: var(--lime);
   r: 7;
 }
+.chart-tooltip { position:absolute; z-index:5; min-width:180px; padding:12px 14px; display:grid; gap:4px; transform:translate(-50%,calc(-100% - 12px)); border:1px solid #cdd9d0; border-radius:12px; background:#fff; box-shadow:0 14px 36px #153a2824; pointer-events:none; color:var(--ink); }
+.chart-tooltip::after { content:""; position:absolute; left:50%; bottom:-6px; width:10px; height:10px; transform:translateX(-50%) rotate(45deg); border-right:1px solid #cdd9d0; border-bottom:1px solid #cdd9d0; background:white; }
+.chart-tooltip > span { color:var(--muted); font-size:11px; }
+.chart-tooltip > div { display:grid; grid-template-columns:repeat(5,1fr); gap:5px; margin-top:5px; }
+.chart-tooltip > div span { padding:5px 4px; display:grid; gap:2px; border-radius:7px; background:#f1f4f1; text-align:center; font-size:11px; }
+.chart-tooltip .rating-1,.chart-tooltip .rating-2 { background:#ffebe7; color:#a53a2b; }
+.chart-tooltip .rating-3 { background:#fff3d4; color:#795c0b; }
+.chart-tooltip .rating-4,.chart-tooltip .rating-5 { background:#e7f5eb; color:#176737; }
 .daily-chart text {
   fill: var(--muted);
   font-size: 10px;

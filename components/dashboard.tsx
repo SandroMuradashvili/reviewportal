@@ -692,7 +692,7 @@ function DailyChart({
   locale: Locale;
   daily: DashboardData["daily"];
 }) {
-  const width = 900,
+  const [hovered,setHovered]=useState<number|null>(null),width = 900,
     height = 250,
     pad = 38,
     max = Math.max(1, ...daily.map((day) => day.total)),
@@ -766,10 +766,8 @@ function DailyChart({
           ))}
           <polyline points={points} className="chart-line" />
           {daily.map((day, index) => (
-            <g key={day.date} className="chart-point">
-              <circle cx={x(index)} cy={y(day.total)} r="5">
-                <title>{`${new Intl.DateTimeFormat(locale === "ka" ? "ka-GE" : locale === "ru" ? "ru-RU" : "en", { dateStyle: "medium" }).format(day.date)} — ${day.total}\n${day.ratings.map((count, rating) => `${rating + 1}★: ${count}`).join(" · ")}`}</title>
-              </circle>
+            <g key={day.date} className={`chart-point ${hovered===index?"active":""}`}>
+              <circle cx={x(index)} cy={y(day.total)} r="5" tabIndex={0} aria-label={`${new Intl.DateTimeFormat(locale === "ka" ? "ka-GE" : locale === "ru" ? "ru-RU" : "en", { dateStyle: "medium" }).format(day.date)} — ${day.total}`} onMouseEnter={()=>setHovered(index)} onMouseLeave={()=>setHovered(null)} onFocus={()=>setHovered(index)} onBlur={()=>setHovered(null)}/>
               {index % 5 === 0 || index === daily.length - 1 ? (
                 <text x={x(index)} y={height - 12} textAnchor="middle">
                   {new Intl.DateTimeFormat(
@@ -785,6 +783,7 @@ function DailyChart({
             </g>
           ))}
         </svg>
+        {hovered!==null&&daily[hovered]?<div className="chart-tooltip" role="status" style={{left:`${Math.max(9,Math.min(91,(x(hovered)/width)*100))}%`,top:`${Math.max(8,Math.min(68,(y(daily[hovered].total)/height)*100))}%`}}><strong>{new Intl.DateTimeFormat(locale==="ka"?"ka-GE":locale==="ru"?"ru-RU":"en",{dateStyle:"medium"}).format(daily[hovered].date)}</strong><span>{daily[hovered].total} {tr(locale,"პასუხი","responses","ответов")}</span><div>{daily[hovered].ratings.map((count,rating)=><span className={`rating-${rating+1}`} key={rating}><b>{rating+1}★</b>{count}</span>)}</div></div>:null}
       </div>
     </section>
   );
