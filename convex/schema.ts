@@ -25,6 +25,8 @@ export default defineSchema({
     ),
     trialLimit: v.number(),
     packageName: v.optional(v.string()),
+    packageId: v.optional(v.id("packages")),
+    portalLimit: v.optional(v.number()),
     startsAt: v.optional(v.number()),
     expiresAt: v.optional(v.number()),
     adminNotes: v.optional(v.string()),
@@ -155,4 +157,10 @@ export default defineSchema({
     locale: v.string(),
     acceptedAt: v.number(),
   }).index("user", ["userId"]),
+  legalDocuments: defineTable({
+    documentType:v.union(v.literal("privacy"),v.literal("terms"),v.literal("acceptable-use")),
+    locale:v.union(v.literal("ka"),v.literal("en"),v.literal("ru")),
+    title:v.string(),intro:v.string(),sections:v.array(v.object({heading:v.string(),body:v.string()})),
+    version:v.string(),updatedAt:v.number(),updatedBy:v.id("users"),
+  }).index("document_locale",["documentType","locale"]),
 });

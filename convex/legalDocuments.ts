@@ -1,0 +1,9 @@
+import { mutation, query } from "./_generated/server";
+import { v } from "convex/values";
+import { requireAdmin } from "./lib/auth";
+
+const documentType=v.union(v.literal("privacy"),v.literal("terms"),v.literal("acceptable-use"));
+const locale=v.union(v.literal("ka"),v.literal("en"),v.literal("ru"));
+export const document=query({args:{documentType,locale},handler:async(ctx,args)=>ctx.db.query("legalDocuments").withIndex("document_locale",q=>q.eq("documentType",args.documentType).eq("locale",args.locale)).unique()});
+export const latest=query({args:{},handler:async ctx=>{const rows=await ctx.db.query("legalDocuments").collect();return rows.length?Math.max(...rows.map(row=>row.updatedAt)):null}});
+export const save=mutation({args:{documentType,locale,title:v.string(),intro:v.string(),sections:v.array(v.object({heading:v.string(),body:v.string()})),version:v.string()},handler:async(ctx,args)=>{const admin=await requireAdmin(ctx),existing=await ctx.db.query("legalDocuments").withIndex("document_locale",q=>q.eq("documentType",args.documentType).eq("locale",args.locale)).unique(),clean=(value:string,max:number)=>value.normalize("NFC").trim().slice(0,max),payload={title:clean(args.title,160),intro:clean(args.intro,1500),sections:args.sections.slice(0,30).map(section=>({heading:clean(section.heading,180),body:clean(section.body,5000)})).filter(section=>section.heading&&section.body),version:clean(args.version,40),updatedAt:Date.now(),updatedBy:admin._id};if(!payload.title||!payload.intro||!payload.sections.length)throw new Error("Title, introduction and at least one section are required");if(existing)await ctx.db.patch(existing._id,payload);else await ctx.db.insert("legalDocuments",{documentType:args.documentType,locale:args.locale,...payload});await ctx.db.insert("auditLogs",{actorId:admin._id,action:"legal.update",targetType:"legal",targetId:`${args.documentType}:${args.locale}`,metadata:{version:payload.version},timestamp:Date.now()})}});

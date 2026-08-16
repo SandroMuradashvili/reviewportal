@@ -85,7 +85,7 @@ export const overview = query({
     return {
       user,
       portals,
-      subscription: subscription ?? {
+      subscription: subscription ? {...subscription,status:subscription.expiresAt!==undefined&&subscription.expiresAt<=Date.now()?"expired" as const:subscription.status} : {
         status: "trial" as const,
         trialLimit: 10,
       },

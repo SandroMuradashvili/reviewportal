@@ -15,6 +15,7 @@ export const bySlug = query({
       .query("subscriptions")
       .withIndex("owner", (q) => q.eq("ownerId", portal.ownerId))
       .unique();
+    if(subscription?.status==="expired"||(subscription?.expiresAt!==undefined&&subscription.expiresAt<=Date.now()))return {state:"subscription-ended" as const,name:portal.name};
     if (
       (subscription?.status ?? "trial") === "trial" &&
       portal.submissionCount >= (subscription?.trialLimit ?? 10)

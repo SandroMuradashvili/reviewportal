@@ -31,9 +31,10 @@ import {
   Route,
 } from "lucide-react";
 import QRCode from "qrcode";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import { Locale } from "@/lib/i18n";
 import { slugFromBusinessName } from "@/lib/portal-validation";
+import { legalContent } from "@/lib/legal";
 
 type View = "overview" | "portals" | "settings" | "support" | "admin";
 type DashboardData = FunctionReturnType<typeof api.dashboardData.overview>;
@@ -241,6 +242,7 @@ const tr = (locale: Locale, ka: string, en: string, ru: string) =>
 export function Dashboard({ siteUrl }: { siteUrl: string }) {
   const data = useQuery(api.dashboardData.overview),
     me = useQuery(api.users.me),
+    legalUpdate = useQuery(api.legalDocuments.latest),
     adminUsers = useQuery(
       api.admin.users,
       me?.user.role === "admin" ? {} : "skip",
@@ -260,7 +262,9 @@ export function Dashboard({ siteUrl }: { siteUrl: string }) {
     deleteAccount = useMutation(api.users.deleteAccount),
     setUserLocale = useMutation(api.users.setLocale),
     setUserState = useMutation(api.admin.setState),
-    activate = useMutation(api.admin.activate),
+    assignSubscription = useMutation(api.admin.assignSubscription),
+    expireSubscription = useMutation(api.admin.expireSubscription),
+    saveLegalDocument = useMutation(api.legalDocuments.save),
     initializeCatalog = useMutation(api.admin.initializeCatalog),
     generateProductImageUploadUrl = useMutation(api.admin.generateProductImageUploadUrl),
     saveProduct = useMutation(api.admin.saveProduct),
@@ -404,6 +408,8 @@ export function Dashboard({ siteUrl }: { siteUrl: string }) {
               <div className="trial admin-access">
                 <strong>{d.adminAccess}</strong>
               </div>
+            ) : me.subscription.status === "expired" ? (
+              <div className="trial subscription-expired"><strong>{tr(locale,"წვდომა გასააქტიურებელია","Plan needs reactivation","Требуется повторная активация")}</strong></div>
             ) : me.subscription.status === "trial" ? (
               <div className="trial">
                 <strong>{d.trial(remaining, trialLimit)}</strong>
@@ -425,19 +431,21 @@ export function Dashboard({ siteUrl }: { siteUrl: string }) {
             {error}
           </p>
         ) : null}
+        {legalUpdate?<section className="legal-update-notice"><strong>{tr(locale,"იურიდიული დოკუმენტები განახლდა","Legal documents were updated","Юридические документы обновлены")}</strong><span>{new Intl.DateTimeFormat(locale==="ka"?"ka-GE":locale==="ru"?"ru-RU":"en",{dateStyle:"medium"}).format(legalUpdate)}</span><Link href={`/${locale}/terms`}>{tr(locale,"ცვლილებების ნახვა","Review changes","Посмотреть изменения")}</Link></section>:null}
+        {me.user.role !== "admin" && me.subscription.status === "expired" ? <section className="subscription-warning" role="alert"><strong>{tr(locale,"თქვენი პაკეტის ვადა დასრულდა.","Your subscription has expired.","Срок вашей подписки истёк.")}</strong><span>{tr(locale,"პანელი და ისტორია ხელმისაწვდომია, მაგრამ პორტალები აღარ მიიღებს ახალ უკუკავშირს ხელახლა გააქტიურებამდე.","Your dashboard and history remain available, but portals cannot accept new feedback until access is reactivated.","Панель и история доступны, но порталы не принимают новые отзывы до повторной активации.")}</span></section>:null}
         {view === "overview" ? (
           <>
             <PortalScope locale={locale} portals={portals} value={activePortal} onChange={setSelectedPortal} />
             <Overview locale={locale} data={scopedData} setView={setView} />
             <DailyChart locale={locale} daily={scopedData.daily} />
-            <Feedback
+            <div className="feedback-workspace" id="feedback-inbox"><Feedback
               locale={locale}
               rows={filteredFeedback}
               busy={busy}
               act={act}
               setFeedbackStatus={setFeedbackStatus}
               removeFeedback={removeFeedback}
-            />
+            /></div>
           </>
         ) : null}
         {view === "portals" ? (
@@ -475,7 +483,9 @@ export function Dashboard({ siteUrl }: { siteUrl: string }) {
             busy={busy}
             act={act}
             setUserState={setUserState}
-            activate={activate}
+            assignSubscription={assignSubscription}
+            expireSubscription={expireSubscription}
+            saveLegalDocument={saveLegalDocument}
             saveProduct={saveProduct}
             generateProductImageUploadUrl={generateProductImageUploadUrl}
             removeProduct={removeProduct}
@@ -1682,26 +1692,9 @@ function Feedback({
         {(["all","unread","unresolved","resolved"] as const).map((status) => <button role="tab" aria-selected={statusFilter === status} className={statusFilter === status ? "active" : ""} key={status} onClick={() => setStatusFilter(status)}>{tr(locale,status === "all" ? "ყველა" : status === "unread" ? "უნახავი" : status === "unresolved" ? "მოუგვარებელი" : "მოგვარებული",status === "all" ? "All" : status === "unread" ? "Unseen" : status === "unresolved" ? "Unresolved" : "Resolved",status === "all" ? "Все" : status === "unread" ? "Новые" : status === "unresolved" ? "Нерешённые" : "Решённые")}</button>)}
       </div>
       <div className="feedback-toolbar card">
-        <div className="rating-range"><span>{tr(locale,"რეიტინგი","Rating","Рейтинг")}: {minRating}–{maxRating} ★</span><div className="rating-range-controls"><input aria-label="Minimum rating" type="range" min="1" max="5" value={minRating} onChange={(e) => setMinRating(Math.min(Number(e.target.value),maxRating))}/><input aria-label="Maximum rating" type="range" min="1" max="5" value={maxRating} onChange={(e) => setMaxRating(Math.max(Number(e.target.value),minRating))}/></div><div className="rating-ticks">{[1,2,3,4,5].map(n=><span key={n}>{n}</span>)}</div></div>
+        <div className="rating-range"><span>{tr(locale,"რეიტინგი","Rating","Рейтинг")}: {minRating}–{maxRating} ★</span><div className="rating-range-controls" style={{"--range-start":`${(minRating-1)*25}%`,"--range-end":`${(maxRating-1)*25}%`} as CSSProperties}><input aria-label="Minimum rating" type="range" min="1" max="5" value={minRating} onChange={(e) => setMinRating(Math.min(Number(e.target.value),maxRating))}/><input aria-label="Maximum rating" type="range" min="1" max="5" value={maxRating} onChange={(e) => setMaxRating(Math.max(Number(e.target.value),minRating))}/></div><div className="rating-ticks">{[1,2,3,4,5].map(n=><span key={n}>{n}</span>)}</div></div>
         <details className="filter-menu"><summary>{categoryFilter === "all" ? tr(locale,"ყველა კატეგორია","All categories","Все категории") : categoryLabels[locale][categoryFilter as keyof typeof categoryLabels[typeof locale]]}</summary><div><button className={categoryFilter === "all" ? "active" : ""} onClick={() => setCategoryFilter("all")}>{tr(locale,"ყველა კატეგორია","All categories","Все категории")}</button>{Object.entries(categoryLabels[locale]).map(([value,label])=><button className={categoryFilter === value ? "active" : ""} key={value} onClick={() => setCategoryFilter(value)}>{label}</button>)}</div></details>
-        <select
-          className="select"
-          value={days}
-          onChange={(e) => setDays(e.target.value)}
-        >
-          <option value="all">
-            {tr(locale, "ყველა თარიღი", "Any date", "Все даты")}
-          </option>
-          <option value="7">
-            {tr(locale, "ბოლო 7 დღე", "Last 7 days", "Последние 7 дней")}
-          </option>
-          <option value="30">
-            {tr(locale, "ბოლო 30 დღე", "Last 30 days", "Последние 30 дней")}
-          </option>
-          <option value="90">
-            {tr(locale, "ბოლო 90 დღე", "Last 90 days", "Последние 90 дней")}
-          </option>
-        </select>
+        <details className="filter-menu"><summary>{days==="all"?tr(locale,"ყველა თარიღი","Any date","Все даты"):tr(locale,`ბოლო ${days} დღე`,`Last ${days} days`,`Последние ${days} дней`)}</summary><div>{[["all",tr(locale,"ყველა თარიღი","Any date","Все даты")],["7",tr(locale,"ბოლო 7 დღე","Last 7 days","Последние 7 дней")],["30",tr(locale,"ბოლო 30 დღე","Last 30 days","Последние 30 дней")],["90",tr(locale,"ბოლო 90 დღე","Last 90 days","Последние 90 дней")]].map(([value,label])=><button className={days===value?"active":""} key={value} onClick={()=>setDays(value)}>{label}</button>)}</div></details>
         <div className="feedback-actions"><button className={`button secondary ${selecting ? "active" : ""}`} onClick={() => {setSelecting(!selecting);setSelected([])}}>{selecting ? tr(locale,"დასრულება","Done","Готово") : tr(locale,"არჩევა","Select","Выбрать")}</button>{selecting?<><button className="button secondary" onClick={() => setSelected(selected.length === filtered.length ? [] : filtered.map(row=>row._id))}>{selected.length === filtered.length ? tr(locale,"არჩევის მოხსნა","Clear","Снять") : tr(locale,"ყველას არჩევა","Select all","Выбрать все")}</button><button className="button secondary" disabled={!selected.length||busy} onClick={() => void act(()=>Promise.all(selected.map(feedbackId=>setFeedbackStatus({feedbackId,status:"resolved"}))),tr(locale,"მონიშნული მოგვარებულია.","Selected feedback resolved.","Выбранные отзывы решены.")).then(ok=>{if(ok)setSelected([])})}><CheckCircle2 size={16}/>{tr(locale,"მოგვარება","Resolve","Решить")}</button></>:null}<button className="button secondary" onClick={exportRows}><Download size={16}/>{tr(locale,"ექსპორტი","Export","Экспорт")}</button><button className="button secondary danger-button" disabled={!selected.length} onClick={() => setDeleteRequest("selected")}><Trash2 size={16}/>{tr(locale,"წაშლა","Delete","Удалить")} {selected.length ? `(${selected.length})` : ""}</button></div>
       </div>
       {filtered.length ? (
@@ -1710,7 +1703,7 @@ function Feedback({
             <article
               className={`card feedback-item clickable ${selecting ? "is-selecting" : ""} ${row.status === "unread" ? "is-unread" : ""}`}
               key={row._id}
-              onClick={() => void open(row)}
+              onClick={() => selecting ? setSelected(current=>current.includes(row._id)?current.filter(id=>id!==row._id):[...current,row._id]) : void open(row)}
             >
               {selecting ? <label
                 className="feedback-check"
@@ -2271,7 +2264,9 @@ function Admin({
   busy,
   act,
   setUserState,
-  activate,
+  assignSubscription,
+  expireSubscription,
+  saveLegalDocument,
   saveProduct,
   generateProductImageUploadUrl,
   removeProduct,
@@ -2283,7 +2278,9 @@ function Admin({
   busy: boolean;
   act: Act;
   setUserState: ReactMutation<typeof api.admin.setState>;
-  activate: ReactMutation<typeof api.admin.activate>;
+  assignSubscription: ReactMutation<typeof api.admin.assignSubscription>;
+  expireSubscription: ReactMutation<typeof api.admin.expireSubscription>;
+  saveLegalDocument: ReactMutation<typeof api.legalDocuments.save>;
   saveProduct: ReactMutation<typeof api.admin.saveProduct>;
   generateProductImageUploadUrl: ReactMutation<typeof api.admin.generateProductImageUploadUrl>;
   removeProduct: ReactMutation<typeof api.admin.removeProduct>;
@@ -2295,7 +2292,7 @@ function Admin({
     >(null),
     [packageEditor, setPackageEditor] = useState<
       AdminCatalog["packages"][number] | null | "new"
-    >(null);
+    >(null),[subscriptionUser,setSubscriptionUser]=useState<AdminUsers[number]|null>(null),[demoMode,setDemoMode]=useState(false);
   return (
     <>
       <div className="section-head compact">
@@ -2303,7 +2300,9 @@ function Admin({
           <h2 className="dash-section-title">Administration</h2>
           <p>Accounts, storefront products and subscription packages.</p>
         </div>
+        <button className={`button secondary ${demoMode?"active":""}`} onClick={()=>setDemoMode(!demoMode)}>{demoMode?"Exit demo data":"Preview demo data"}</button>
       </div>
+      {demoMode?<DemoAdminData/>:null}
       <AdminHeading
         icon={ShoppingBag}
         title="NFC products & sets"
@@ -2418,7 +2417,7 @@ function Admin({
         ))}
       </div>
       <AdminHeading icon={ShieldCheck} title="User accounts" />
-      <div className="admin-list">
+      {demoMode?<DemoUserList/>:<div className="admin-list">
         {users.map((item) => (
           <article className="card admin-user" key={item.user._id}>
             <div>
@@ -2429,6 +2428,7 @@ function Admin({
                 {item.user.email} · {item.user.role ?? "owner"} ·{" "}
                 {item.user.state ?? "active"}
               </small>
+              <SubscriptionSummary subscription={item.subscription}/>
             </div>
             <span>
               {item.portalCount} portals · {item.responseCount} responses
@@ -2451,33 +2451,39 @@ function Admin({
                   )
                 }
               >
-                {item.user.state === "suspended" ? "Restore" : "Suspend"}
+                {item.user.state === "suspended" ? "Restore account access" : "Suspend account access"}
               </button>
               <button
                 className="button"
                 disabled={busy}
-                onClick={() =>
-                  void act(
-                    () =>
-                      activate({
-                        ownerId: item.user._id,
-                        packageName: "Growth",
-                        expiresAt: Date.now() + 30 * 86400000,
-                      }),
-                    "Growth activated for 30 days.",
-                  )
-                }
+                onClick={() => setSubscriptionUser(item)}
               >
-                Activate Growth
+                Manage subscription
               </button>
             </div>
           </article>
         ))}
-      </div>
+      </div>}
+      {subscriptionUser?<SubscriptionEditor user={subscriptionUser} packages={catalog.packages} busy={busy} close={()=>setSubscriptionUser(null)} assign={values=>act(()=>assignSubscription(values),"Subscription saved.").then(ok=>{if(ok)setSubscriptionUser(null)})} expire={()=>act(()=>expireSubscription({ownerId:subscriptionUser.user._id}),"Subscription expired.").then(ok=>{if(ok)setSubscriptionUser(null)})}/>:null}
+      <AdminHeading icon={ShieldCheck} title="Legal documents" />
+      <LegalManager busy={busy} save={values=>act(()=>saveLegalDocument(values),"Legal document published. Users will see an in-app update notice.")}/>
     </>
   );
 }
 
+function DemoAdminData(){return <section className="demo-admin-banner"><div><span>Demo mode · browser only</span><strong>No records are written to production</strong></div><div className="demo-admin-stats"><div><strong>100</strong><span>users this month</span></div><div><strong>287</strong><span>portals</span></div><div><strong>4,820</strong><span>responses</span></div><div><strong>8</strong><span>plans ending soon</span></div></div></section>}
+function DemoUserList(){const plans=["ReviewPortal","Business custom","Trial"];return <div className="admin-list demo-user-list">{Array.from({length:100},(_,index)=>{const day=1+index%30,status=index%11===0?"Expired":index%7===0?"Ends soon":"Active",plan=plans[index%plans.length];return <article className="card admin-user" key={index}><div><strong>Demo Business {String(index+1).padStart(3,"0")}</strong><small>owner{index+1}@demo.reviewportal.local · owner · active</small><div className={`subscription-summary ${status==="Expired"?"expired-state":status==="Ends soon"?"ending-state":"active-state"}`}><strong>{plan} · {status}</strong><span>Joined Aug {day}, 2026 · visual preview only</span></div></div><span>{1+index%5} portals · {12+(index*17)%140} responses</span><button className="button secondary" disabled>Demo account</button></article>})}</div>}
+function LegalManager({busy,save}:{busy:boolean;save:(values:Parameters<ReactMutation<typeof api.legalDocuments.save>>[0])=>Promise<boolean>}){const [documentType,setDocumentType]=useState<"privacy"|"terms"|"acceptable-use">("terms"),[locale,setLocale]=useState<Locale>("ka"),stored=useQuery(api.legalDocuments.document,{documentType,locale}),fallback=legalContent[documentType][locale],doc=stored?{title:stored.title,intro:stored.intro,sections:stored.sections.map(section=>[section.heading,section.body] as [string,string])}:fallback,key=`${documentType}:${locale}:${stored?._id??"default"}`;return <form key={key} className="card legal-manager" onSubmit={event=>{event.preventDefault();const f=new FormData(event.currentTarget),sections=String(f.get("sections")??"").split(/\n---\n/).map(block=>{const [heading,...body]=block.split("\n");return {heading:heading.trim(),body:body.join("\n").trim()}}).filter(section=>section.heading&&section.body);void save({documentType,locale,title:String(f.get("title")),intro:String(f.get("intro")),sections,version:String(f.get("version"))})}}><div className="legal-manager-controls"><label>Document<select value={documentType} onChange={event=>setDocumentType(event.target.value as typeof documentType)}><option value="terms">Terms of Service</option><option value="privacy">Privacy Policy</option><option value="acceptable-use">Acceptable Use Policy</option></select></label><label>Language<select value={locale} onChange={event=>setLocale(event.target.value as Locale)}><option value="ka">Georgian</option><option value="en">English</option><option value="ru">Russian</option></select></label><label>Version<input name="version" required defaultValue={stored?.version??new Date().toISOString().slice(0,10)}/></label></div><label>Page title<input name="title" required defaultValue={doc.title}/></label><label>Introduction<textarea name="intro" required defaultValue={doc.intro}/></label><label>Sections <small>Heading on the first line, body below it. Separate sections with a line containing ---</small><textarea className="legal-sections-editor" name="sections" required defaultValue={doc.sections.map(([heading,body])=>`${heading}\n${body}`).join("\n---\n")}/></label><div className="legal-publish-note"><strong>Publishing updates the public page immediately.</strong><span>An in-app notice can be shown to signed-in users. Automated email is unavailable until a sender provider and verified domain are configured.</span></div><button className="button" disabled={busy}>Publish legal document</button></form>}
+function SubscriptionSummary({subscription}:{subscription:AdminUsers[number]["subscription"]}){
+  const [now]=useState(()=>Date.now());
+  if(!subscription)return <div className="subscription-summary trial-state"><strong>Trial / no paid plan</strong><span>Limited trial access</span></div>;
+  const expired=subscription.status==="expired"||(subscription.expiresAt??0)<=now,days=subscription.expiresAt?Math.ceil((subscription.expiresAt-now)/86400000):null;
+  return <div className={`subscription-summary ${expired?"expired-state":days!==null&&days<=7?"ending-state":"active-state"}`}><strong>{subscription.packageName??"Subscription"} · {expired?"Expired":"Active"}</strong><span>{subscription.expiresAt?`${expired?"Ended":"Ends"} ${new Intl.DateTimeFormat("en",{dateStyle:"medium"}).format(subscription.expiresAt)}${!expired&&days!==null?` · ${days} days remaining`:""}`:"No end date"}</span>{!expired&&days!==null&&days<=7?<small>Email reminders due at 7, 3, 2 and 1 days. Delivery provider is not configured.</small>:null}</div>;
+}
+function SubscriptionEditor({user,packages,busy,close,assign,expire}:{user:AdminUsers[number];packages:AdminCatalog["packages"];busy:boolean;close:()=>void;assign:(values:Parameters<ReactMutation<typeof api.admin.assignSubscription>>[0])=>Promise<void>;expire:()=>Promise<void>}){
+  const [now]=useState(()=>Date.now()),date=(timestamp:number)=>new Date(timestamp-new Date(timestamp).getTimezoneOffset()*60000).toISOString().slice(0,10),current=user.subscription;
+  return <div className="dashboard-modal-backdrop"><section className="dashboard-modal card" role="dialog" aria-modal="true"><div className="modal-head"><div><span className="eyebrow">Subscription access</span><h2>{user.user.name||user.user.email}</h2></div><button className="icon-button" onClick={close}><X size={20}/></button></div><SubscriptionSummary subscription={current}/><form className="subscription-form" onSubmit={event=>{event.preventDefault();const f=new FormData(event.currentTarget),start=new Date(`${String(f.get("startsAt"))}T00:00:00`).getTime(),end=new Date(`${String(f.get("expiresAt"))}T23:59:59`).getTime();void assign({ownerId:user.user._id,packageId:String(f.get("packageId")) as AdminCatalog["packages"][number]["_id"],startsAt:start,expiresAt:end,adminNotes:String(f.get("notes")??"")||undefined})}}><label>Package<select name="packageId" required defaultValue={current?.packageId??packages[0]?._id}>{packages.map(plan=><option key={plan._id} value={plan._id}>{plan.name.en} · {plan.priceDisplay}</option>)}</select></label><div className="subscription-dates"><label>Access starts<input type="date" name="startsAt" required defaultValue={date(current?.startsAt??now)}/></label><label>Access ends<input type="date" name="expiresAt" required defaultValue={date(current?.expiresAt??now+30*86400000)}/></label></div><label>Internal note<textarea name="notes" defaultValue={current?.adminNotes??""} placeholder="Payment reference, custom terms or reason for extension"/></label><p className="muted-copy">When the end date passes, the customer keeps dashboard access and historical data, but public portals stop accepting feedback until a plan is assigned again.</p><div className="portal-actions modal-actions">{current?<button className="button secondary danger-button" type="button" disabled={busy} onClick={()=>void expire()}>End access now</button>:null}<button type="button" className="button secondary" onClick={close}>Cancel</button><button className="button" disabled={busy||!packages.length}>Save subscription</button></div></form></section></div>;
+}
 function AdminHeading({
   icon: Icon,
   title,

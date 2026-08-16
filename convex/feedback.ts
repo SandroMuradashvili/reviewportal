@@ -56,6 +56,7 @@ export const submit = mutation({
       .query("subscriptions")
       .withIndex("owner", (q) => q.eq("ownerId", portal.ownerId))
       .unique();
+    if(sub?.status==="expired"||(sub?.expiresAt!==undefined&&sub.expiresAt<=Date.now()))throw new Error("Subscription ended");
     if (
       (sub?.status ?? "trial") === "trial" &&
       portal.submissionCount >= (sub?.trialLimit ?? 10)

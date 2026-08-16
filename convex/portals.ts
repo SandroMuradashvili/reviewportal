@@ -35,11 +35,13 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx),
+      subscription = await ctx.db.query("subscriptions").withIndex("owner",q=>q.eq("ownerId",user._id)).unique(),
       existing = await ctx.db
         .query("portals")
         .withIndex("owner", (q) => q.eq("ownerId", user._id))
         .collect();
-    if (existing.length >= 5) throw new ConvexError("Portal limit reached");
+    const portalLimit=subscription?.portalLimit??(subscription?.status==="active"?5:1);
+    if (existing.length >= portalLimit) throw new ConvexError(`Portal limit reached (${portalLimit})`);
     const name = args.name.normalize("NFC").trim().slice(0, 100);
     if (name.length < 2) throw new ConvexError("Business name is too short");
     const base = validate(() =>
