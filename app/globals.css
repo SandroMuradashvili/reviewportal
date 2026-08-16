@@ -1821,8 +1821,11 @@ h2 {
   color: var(--muted);
 }
 .chart-scroll {
-  overflow-x: auto;
   position:relative;
+  overflow: visible;
+}
+.chart-canvas {
+  overflow-x: auto;
 }
 .daily-chart svg {
   width: 100%;
@@ -1861,6 +1864,13 @@ h2 {
 .chart-tooltip .rating-1,.chart-tooltip .rating-2 { background:#ffebe7; color:#a53a2b; }
 .chart-tooltip .rating-3 { background:#fff3d4; color:#795c0b; }
 .chart-tooltip .rating-4,.chart-tooltip .rating-5 { background:#e7f5eb; color:#176737; }
+.public-dashboard-preview { width:min(1180px,calc(100% - 32px)); min-height:100vh; margin:0 auto; padding:72px 0; }
+.preview-back { position:fixed; z-index:20; top:16px; left:16px; }
+.preview-dashboard-head { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; }
+.preview-dashboard-head h1 { margin:10px 0 8px; font-size:clamp(36px,5vw,58px); }
+.preview-dashboard-head p { margin:0; color:var(--muted); }
+.preview-badge { flex:none; padding:9px 12px; border-radius:999px; background:#e7f5eb; color:var(--green); font-size:12px; font-weight:800; }
+@media (max-width:700px) { .preview-dashboard-head { flex-direction:column; } }
 .daily-chart text {
   fill: var(--muted);
   font-size: 10px;

@@ -245,6 +245,21 @@ const tr = (locale: Locale, ka: string, en: string, ru: string) =>
 
 function buildAnalyticsDemo(data:DashboardData,now:number):DashboardData{const portal=data.portals[0];if(!portal)return data;const ratings=[...Array(28).fill(1),...Array(22).fill(2),...Array(18).fill(3),...Array(17).fill(4),...Array(15).fill(5)] as number[],recent=ratings.map((rating,index)=>({ _id:`demo-feedback-${index}` as FeedbackRow["_id"],_creationTime:now-index*21600000,portalId:portal._id,visitId:`demo-visit-${index}` as FeedbackRow["visitId"],rating,comment:rating<=3?["The wait was longer than expected.","Service could have been more attentive.","The product did not match my expectations."][index%3]:undefined,issueCategories:rating<=3?(["service",index%2?"wait":"quality"] as FeedbackRow["issueCategories"]):[],dataAcknowledgedAt:rating<=3?now-index*21600000:undefined,status:index<12?"unread" as const:index%4===0?"resolved" as const:"read" as const,submittedAt:now-index*21600000,portalName:portal.name})),start=new Date(now);start.setHours(0,0,0,0);const daily=Array.from({length:30},(_,offset)=>{const date=start.getTime()-(29-offset)*86400000,rows=recent.filter(row=>row.submittedAt>=date&&row.submittedAt<date+86400000);return {date,total:rows.length,ratings:[1,2,3,4,5].map(rating=>rows.filter(row=>row.rating===rating).length)}}),ratingDistribution=[1,2,3,4,5].map(rating=>({rating,count:recent.filter(row=>row.rating===rating).length})),metrics={total:100,average:recent.reduce((sum,row)=>sum+row.rating,0)/100,happy:32,uniqueVisitors:143,conversion:69.9,redirects:24,privateResolutions:61},portalMetrics=data.portalMetrics.map(item=>item.portalId===portal._id?{...item,metrics,daily,ratingDistribution}:item);return {...data,portals:data.portals.map(item=>item._id===portal._id?{...item,submissionCount:100}:item),recent,daily,ratingDistribution,metrics,portalMetrics}}
 
+export function PublicDashboardPreview({locale}:{locale:Locale}) {
+  const [now]=useState(()=>Date.now());
+  const ratings=[28,22,18,17,15], start=new Date(now);start.setHours(0,0,0,0);
+  const daily=Array.from({length:30},(_,index)=>{const total=[2,4,1,3,5,2,6,4,3,5][index%10],distribution=[0,0,0,0,0];for(let item=0;item<total;item++)distribution[(index+item*2)%5]++;return {date:start.getTime()-(29-index)*86_400_000,total,ratings:distribution}});
+  const metricRows=[
+    {icon:MessageSquareText,label:tr(locale,"სულ უკუკავშირი","Total feedback","Всего отзывов"),value:"100",detail:tr(locale,"მიღებული შეფასებები","Submitted ratings","Полученные оценки")},
+    {icon:Star,label:tr(locale,"საშუალო შეფასება","Average rating","Средняя оценка"),value:"2.7",detail:"Gvino & Co."},
+    {icon:CheckCircle2,label:tr(locale,"კმაყოფილი მომხმარებლები","Happy ratings","Высокие оценки"),value:"32%",detail:tr(locale,"ოთხი ან ხუთი ვარსკვლავი","Four or five stars","Четыре или пять звёзд")},
+    {icon:Users,label:tr(locale,"უნიკალური ვიზიტორები","Unique visitors","Уникальные посетители"),value:"143",detail:tr(locale,"მიახლოებითი მოწყობილობები","Approximate devices","Примерное число устройств")},
+    {icon:MessageSquareText,label:tr(locale,"პირადად დარჩენილი პრობლემები","Private resolutions","Остались приватными"),value:"61",detail:tr(locale,"1–3★ გარე გადასვლის გარეშე","1–3★ without an outbound click","1–3★ без внешнего перехода")},
+    {icon:Route,label:tr(locale,"გადასვლები","Redirects","Переходы"),value:"24",detail:tr(locale,"დანიშნულების ბმულზე დაწკაპუნებები","Destination link clicks","Переходы по целевой ссылке")},
+  ];
+  return <main className="public-dashboard-preview"><div className="preview-dashboard-head"><div><span className="eyebrow">{tr(locale,"დემო ანალიტიკა","Demo analytics","Демо аналитики")}</span><h1>Gvino &amp; Co.</h1><p>{tr(locale,"30 დღის საჩვენებელი მონაცემები — რეალური ჩანაწერები არ გამოიყენება.","A 30-day example using simulated data—no real records are shown.","Пример за 30 дней на тестовых данных — реальные записи не используются.")}</p></div><span className="preview-badge">{tr(locale,"მხოლოდ სანახავად","Preview only","Только просмотр")}</span></div><div className="metrics dashboard-metrics">{metricRows.map(item=><Metric {...item} key={item.label}/>)}</div><div className="distribution card"><h3>{tr(locale,"შეფასებების განაწილება","Rating distribution","Распределение оценок")}</h3>{ratings.slice().reverse().map((count,index)=>{const rating=5-index;return <div className="bar-row" key={rating}><span>{rating} ★</span><div><i style={{width:`${count}%`}}/></div><strong>{count}</strong></div>})}</div><DailyChart locale={locale} daily={daily}/></main>;
+}
+
 export function Dashboard({ siteUrl }: { siteUrl: string }) {
   const data = useQuery(api.dashboardData.overview),
     me = useQuery(api.users.me),
@@ -688,7 +703,7 @@ function Overview({
     </>
   );
 }
-function DailyChart({
+export function DailyChart({
   locale,
   daily,
 }: {
@@ -729,6 +744,7 @@ function DailyChart({
         </span>
       </div>
       <div className="chart-scroll">
+        <div className="chart-canvas">
         <svg
           viewBox={`0 0 ${width} ${height}`}
           role="img"
@@ -786,6 +802,7 @@ function DailyChart({
             </g>
           ))}
         </svg>
+        </div>
         {hovered!==null&&daily[hovered]?<div className="chart-tooltip" role="status" style={{left:`${Math.max(9,Math.min(91,(x(hovered)/width)*100))}%`,top:`${Math.max(8,Math.min(68,(y(daily[hovered].total)/height)*100))}%`}}><strong>{new Intl.DateTimeFormat(locale==="ka"?"ka-GE":locale==="ru"?"ru-RU":"en",{dateStyle:"medium"}).format(daily[hovered].date)}</strong><span>{daily[hovered].total} {tr(locale,"პასუხი","responses","ответов")}</span><div>{daily[hovered].ratings.map((count,rating)=><span className={`rating-${rating+1}`} key={rating}><b>{rating+1}★</b>{count}</span>)}</div></div>:null}
       </div>
     </section>
