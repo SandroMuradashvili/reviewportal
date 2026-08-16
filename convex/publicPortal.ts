@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { MAX_DEVICE_SCAN_COUNT, validVisitToken } from "../lib/abuse-protection";
 
 export const bySlug = query({
   args: { slug: v.string() },
@@ -38,6 +39,7 @@ export const bySlug = query({
 export const visit = mutation({
   args: { slug: v.string(), visitTokenHash: v.string() },
   handler: async (ctx, args) => {
+    if(!validVisitToken(args.visitTokenHash))return null;
     const portal = await ctx.db
       .query("portals")
       .withIndex("slug", (q) => q.eq("slug", args.slug))
@@ -53,7 +55,7 @@ export const visit = mutation({
     if (existing) {
       await ctx.db.patch(existing._id, {
         lastSeen: now,
-        scanCount: existing.scanCount + 1,
+        scanCount: Math.min(existing.scanCount + 1,MAX_DEVICE_SCAN_COUNT),
       });
       return existing._id;
     }
@@ -79,6 +81,7 @@ export const visit = mutation({
 export const starSelected = mutation({
   args: { slug: v.string(), visitTokenHash: v.string(), rating: v.number() },
   handler: async (ctx, args) => {
+    if(!validVisitToken(args.visitTokenHash))return;
     if (!Number.isInteger(args.rating) || args.rating < 1 || args.rating > 5)
       return;
     const portal = await ctx.db
@@ -92,7 +95,9 @@ export const starSelected = mutation({
         q.eq("portalId", portal._id).eq("tokenHash", args.visitTokenHash),
       )
       .unique();
-    if (visit)
+    if (visit) {
+      const previous=await ctx.db.query("events").withIndex("visit_type",q=>q.eq("visitId",visit._id).eq("type","star_selected")).first();
+      if(previous){await ctx.db.patch(previous._id,{rating:args.rating,timestamp:Date.now()});return;}
       await ctx.db.insert("events", {
         portalId: portal._id,
         visitId: visit._id,
@@ -100,12 +105,14 @@ export const starSelected = mutation({
         rating: args.rating,
         timestamp: Date.now(),
       });
+    }
   },
 });
 
 export const redirected = mutation({
   args: { slug: v.string(), visitTokenHash: v.string() },
   handler: async (ctx, args) => {
+    if(!validVisitToken(args.visitTokenHash))return;
     const portal = await ctx.db
       .query("portals")
       .withIndex("slug", (q) => q.eq("slug", args.slug))

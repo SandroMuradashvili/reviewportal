@@ -105,7 +105,9 @@ export default defineSchema({
     ),
     rating: v.optional(v.number()),
     timestamp: v.number(),
-  }).index("portal_date", ["portalId", "timestamp"]),
+  })
+    .index("portal_date", ["portalId", "timestamp"])
+    .index("visit_type", ["visitId", "type"]),
   products: defineTable({
     slug: v.optional(v.string()),
     kind: v.optional(v.union(v.literal("individual"), v.literal("set"))),

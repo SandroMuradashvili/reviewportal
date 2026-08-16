@@ -1,6 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { requirePortalOwner, requireUser } from "./lib/auth";
+import { PORTAL_BURST_LIMIT, PORTAL_BURST_WINDOW_MS, validVisitToken } from "../lib/abuse-protection";
 export const byPortal = query({
   args: { portalId: v.id("portals") },
   handler: async (ctx, { portalId }) => {
@@ -32,6 +33,7 @@ export const submit = mutation({
     dataAcknowledged: v.boolean(),
   },
   handler: async (ctx, args) => {
+    if(!validVisitToken(args.visitTokenHash))throw new Error("Invalid visit token");
     if (!Number.isInteger(args.rating) || args.rating < 1 || args.rating > 5)
       throw new Error("Rating must be 1–5");
     const comment = args.comment?.normalize("NFC").trim(),
@@ -52,6 +54,8 @@ export const submit = mutation({
       .unique();
     if (!portal || portal.status !== "live")
       throw new Error("Portal unavailable");
+    const burst=await ctx.db.query("feedback").withIndex("portal_date",q=>q.eq("portalId",portal._id).gte("submittedAt",Date.now()-PORTAL_BURST_WINDOW_MS)).take(PORTAL_BURST_LIMIT+1);
+    if(burst.length>=PORTAL_BURST_LIMIT)throw new Error("Too many submissions. Please try again shortly");
     const sub = await ctx.db
       .query("subscriptions")
       .withIndex("owner", (q) => q.eq("ownerId", portal.ownerId))
