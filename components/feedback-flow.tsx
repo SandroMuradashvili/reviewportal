@@ -3,7 +3,6 @@ import { ExternalLink, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { copy, Locale } from "@/lib/i18n";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -29,6 +28,7 @@ const stateCopy = {
     trial: "ამ ბიზნესის საცდელი ლიმიტი ამოიწურა.",
     business: "ბიზნესის ნახვა Google-ზე",
     retry: "გთხოვთ, სცადოთ თავიდან.",
+    alreadySubmitted: "თქვენი პასუხი უკვე მიღებულია.",
     privatePrompt:
       "ვწუხვართ, რომ გამოცდილება იდეალური არ იყო. მოგვწერეთ რა მოხდა, რათა ბიზნესმა პრობლემის მოგვარება შეძლოს.",
     categoryTitle: "რა საჭიროებს გაუმჯობესებას?",
@@ -67,6 +67,7 @@ const stateCopy = {
     trial: "This business has reached its trial response limit.",
     business: "View the business on Google",
     retry: "Please try again.",
+    alreadySubmitted: "Your response has already been received.",
     privatePrompt:
       "We’re sorry your experience wasn’t ideal. Tell us what happened so the business can address it.",
     categoryTitle: "What needs improvement?",
@@ -106,6 +107,7 @@ const stateCopy = {
     trial: "Компания достигла лимита пробных ответов.",
     business: "Открыть компанию в Google",
     retry: "Попробуйте ещё раз.",
+    alreadySubmitted: "Ваш ответ уже получен.",
     privatePrompt:
       "Нам жаль, что ваш опыт оказался неидеальным. Расскажите, что произошло, чтобы компания могла решить проблему.",
     categoryTitle: "Что следует улучшить?",
@@ -148,7 +150,6 @@ export function FeedbackFlow({
   business: string;
   slug: string;
 }) {
-  const router = useRouter();
   const demo = slug === "demo",
     portal = useQuery(api.publicPortal.bySlug, demo ? "skip" : { slug }),
     submitFeedback = useMutation(api.feedback.submit),
@@ -257,8 +258,13 @@ export function FeedbackFlow({
       setRevealing(true);
       await new Promise((resolve) => setTimeout(resolve, 4800));
       setSent(true);
-    } catch {
-      setError(s.retry);
+    } catch (submissionError) {
+      setError(
+        submissionError instanceof Error &&
+          submissionError.message.includes("Feedback already submitted")
+          ? s.alreadySubmitted
+          : s.retry,
+      );
     } finally {
       setRevealing(false);
       setBusy(false);
@@ -270,7 +276,10 @@ export function FeedbackFlow({
     window.location.assign(businessDestination);
   }
   function close() {
-    router.push(`/${locale}`);
+    window.close();
+    window.setTimeout(() => {
+      if (!window.closed) window.location.replace("https://www.google.com/");
+    }, 150);
   }
   return (
     <main className={`feedback-page ${demo ? "demo-feedback-page" : ""}`}>
