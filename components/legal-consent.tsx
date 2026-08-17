@@ -1,9 +1,8 @@
 "use client";
 import { ShieldCheck } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect,useRef,useState,useSyncExternalStore } from "react";
-import { getLocale,Locale } from "@/lib/i18n";
+import { Locale } from "@/lib/i18n";
 import { legalContent } from "@/lib/legal";
 
 const version="2026-08-16";
@@ -12,13 +11,9 @@ const consentCopy={
   en:{title:"Privacy and terms",body:"Please review how we handle data and the rules that apply when you use ReviewPortal.",hint:"Scroll to the end to continue",accept:"Accept and continue",full:"Open full pages",language:"Language"},
   ru:{title:"Конфиденциальность и условия",body:"Ознакомьтесь с порядком обработки данных и правилами использования ReviewPortal.",hint:"Прокрутите до конца, чтобы продолжить",accept:"Принять и продолжить",full:"Открыть полные страницы",language:"Язык"},
 };
-const legalPaths=new Set(["privacy","terms","acceptable-use"]);
-
-export function LegalConsent(){
-  const path=usePathname(),pathLocale=getLocale(path.split("/")[1]??"ka");
-  const [locale,setLocale]=useState<Locale>(pathLocale),[scrolledToEnd,setScrolledToEnd]=useState(false);
+export function LegalConsent({initialLocale}:{initialLocale:Locale}){
+  const [locale,setLocale]=useState<Locale>(initialLocale),[scrolledToEnd,setScrolledToEnd]=useState(false);
   const accepted=useSyncExternalStore(subscribeConsent,getConsent,()=>false),scrollRef=useRef<HTMLDivElement>(null),t=consentCopy[locale];
-  const legalRoute=legalPaths.has(path.split("/")[2]??"");
   useEffect(()=>{
     const frame=requestAnimationFrame(()=>{
       const el=scrollRef.current;
@@ -26,7 +21,7 @@ export function LegalConsent(){
     });
     return()=>cancelAnimationFrame(frame);
   },[locale]);
-  if(accepted||legalRoute)return null;
+  if(accepted)return null;
   function onScroll(){const el=scrollRef.current;if(el&&el.scrollHeight-el.scrollTop-el.clientHeight<24)setScrolledToEnd(true)}
   return <div className="consent-backdrop"><section className="consent-modal consent-modal-lg" role="dialog" aria-modal="true" aria-labelledby="consent-title" aria-describedby="consent-description">
     <div className="consent-top"><div className="consent-icon"><ShieldCheck size={26}/></div><div className="consent-locales" aria-label={t.language}>{(["ka","en","ru"] as const).map(item=><button key={item} className={item===locale?"active":""} aria-pressed={item===locale} onClick={()=>{setScrolledToEnd(false);setLocale(item)}}>{item.toUpperCase()}</button>)}</div></div>

@@ -270,8 +270,7 @@ export function FeedbackFlow({
     window.location.assign(businessDestination);
   }
   function close() {
-    if (window.history.length > 1) router.back();
-    else router.push(`/${locale}`);
+    router.push(`/${locale}`);
   }
   return (
     <main className={`feedback-page ${demo ? "demo-feedback-page" : ""}`}>
@@ -280,19 +279,17 @@ export function FeedbackFlow({
         aria-live="polite"
         aria-busy={revealing}
       >
-        {demo ? (
-          <nav className="demo-locales" aria-label={s.language}>
-            {(["ka", "en", "ru"] as const).map((item) => (
-              <Link
-                key={item}
-                className={item === locale ? "active" : ""}
-                href={`/${item}/r/demo`}
-              >
-                {item.toUpperCase()}
-              </Link>
-            ))}
-          </nav>
-        ) : null}
+        <nav className="demo-locales" aria-label={s.language}>
+          {(["ka", "en", "ru"] as const).map((item) => (
+            <Link
+              key={item}
+              className={item === locale ? "active" : ""}
+              href={`/${item}/r/${slug}`}
+            >
+              {item.toUpperCase()}
+            </Link>
+          ))}
+        </nav>
         <div className="portal-brand-mark">
           {demo ? (
             <Image

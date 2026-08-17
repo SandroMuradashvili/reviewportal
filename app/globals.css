@@ -23,6 +23,9 @@ body {
   color: var(--ink);
   font-family: "Manrope", "Noto Sans Georgian", sans-serif;
 }
+body:has(.feedback-page) {
+  background: #123f2e;
+}
 a {
   color: inherit;
   text-decoration: none;
@@ -512,12 +515,16 @@ h2 {
 }
 .feedback-page {
   min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   place-items: center;
   padding: 28px;
-  background: #edf0ea;
+  background:
+    radial-gradient(circle at 80% 10%, #d9f26b 0 11%, transparent 32%),
+    linear-gradient(145deg, #123f2e, #1f6b4d);
 }
 .feedback-card {
+  position: relative;
   width: min(520px, 100%);
   background: white;
   border-radius: 30px;
@@ -543,13 +550,7 @@ h2 {
   color: var(--muted);
   margin-top: 20px;
 }
-.demo-feedback-page {
-  background:
-    radial-gradient(circle at 80% 10%, #d9f26b 0 11%, transparent 32%),
-    linear-gradient(145deg, #123f2e, #1f6b4d);
-}
 .demo-feedback-card {
-  position: relative;
   border: 1px solid #ffffff80;
   box-shadow: 0 30px 100px #071d144d;
 }
